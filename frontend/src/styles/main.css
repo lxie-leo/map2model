@@ -1,0 +1,841 @@
+/* 全局样式:布局骨架 + 通用控件(徽章/进度条/按钮/面板)。 */
+
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --ink: #22272e;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --warn: #d97706;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ---- 自定义滚动条:细条 + 圆角,浅灰不抢戏,不用系统那种粗黑样式 ---- */
+
+/* Firefox 的写法 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c9ced6 transparent;
+}
+
+/* Chrome/Edge/Safari 的写法 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c9ced6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a2aab5;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 14px;
+}
+
+/* ---- 布局骨架 ---- */
+
+/* 没有顶部导航栏,内容直接占满整屏 */
+.app-main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+}
+
+/* ---- 主页:左地图右面板 ---- */
+
+.home-view {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.map-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.home-view .side {
+  width: 320px;
+  flex: none;
+  padding: 12px;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden; /* 滚动只发生在下面的任务列表里,框选面板钉住不动 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 任务列表的独立滚动区:占掉侧栏剩余高度,自己滚(横向不许滚) */
+.task-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ---- 地点搜索框(浮在地图左上角) ---- */
+
+.map-search {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  width: 260px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+}
+
+.map-search .row {
+  display: flex;
+  gap: 6px;
+}
+
+.map-search input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.map-search input:focus {
+  border-color: var(--accent);
+}
+
+.map-search .msg {
+  margin: 6px 2px 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.map-search .results {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.map-search .results li {
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-search .results li:hover {
+  background: #eef2fe;
+}
+
+.map-search .results small {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 侧栏品牌行 */
+.side-brand {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+/* ---- 框选面板(侧栏里空间金贵,不留大标题、行距收紧) ---- */
+
+.bbox-panel .hint {
+  color: var(--muted);
+  margin: 0 0 2px;
+}
+
+/* "重新框选"次按钮:比生成按钮矮一截、不填色,别抢主按钮的戏 */
+.bbox-panel .redraw {
+  width: 100%;
+  padding: 7px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.bbox-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.bbox-table td {
+  padding: 2px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bbox-table td:nth-child(odd) {
+  color: var(--muted);
+}
+
+.area {
+  margin: 6px 0;
+  font-weight: 600;
+}
+
+.area.danger {
+  color: var(--danger);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 6px;
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.options label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* ---- 按钮 ---- */
+
+button,
+.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+button:hover:not(:disabled),
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ---- 状态徽章 / 进度条 ---- */
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #fff;
+  background: var(--muted);
+}
+
+.badge.running {
+  background: var(--accent);
+}
+
+.badge.completed {
+  background: var(--ok);
+}
+
+.badge.failed {
+  background: var(--danger);
+}
+
+.badge.cancelled {
+  background: #9ca3af;
+}
+
+.progress {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: #e8eaed;
+  overflow: hidden;
+}
+
+.progress .bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.progress .pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #374151;
+}
+
+.progress.big {
+  height: 22px;
+}
+
+/* ---- 任务卡片 ---- */
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar h1 {
+  font-size: 18px;
+  margin: 8px 0;
+}
+
+.cards {
+  display: grid;
+  gap: 10px;
+  /* 任务列表住在侧栏里,永远单列。原来全宽页面的 280px 起步宽度
+     比侧栏内容宽,会把滚动区撑出横向滚动条 */
+  grid-template-columns: 1fr;
+}
+
+.task-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-card .row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-card .row1 .id {
+  font-family: Consolas, monospace;
+  color: var(--muted);
+}
+
+.task-card .row1 .time {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.task-card .row2 {
+  display: flex;
+  gap: 12px;
+  color: var(--muted);
+}
+
+/* 进度条里要放"45% · 拉取 OSM 数据"这样的文字,加高一点才放得下 */
+.task-card .progress {
+  height: 16px;
+}
+
+.task-card {
+  cursor: pointer; /* 点一下在地图上回显它的框选范围 */
+}
+
+.task-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.task-card .actions {
+  display: flex;
+  flex-wrap: wrap; /* 侧栏窄,按钮放不下就换行 */
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.error {
+  color: var(--danger);
+  margin: 4px 0;
+  word-break: break-all;
+}
+
+.warning {
+  color: var(--warn);
+  margin: 2px 0;
+  font-size: 12px;
+}
+
+.empty {
+  color: var(--muted);
+  margin: 32px 0;
+  text-align: center;
+}
+
+/* ---- 查看页 ---- */
+
+.viewer-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 查看页没有顶栏:信息/标签/警告全浮在场景上 */
+
+.viewer-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.pane .hint {
+  margin: auto;
+  color: var(--muted);
+}
+
+/* 居中的整页提示(加载中/出错) */
+.viewer-view .center-hint {
+  margin: auto;
+  color: var(--muted);
+}
+
+/* 浮动小部件的通用底:半透明白 + 毛玻璃,和场景融在一起 */
+.hud {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap; /* 放不下时整个项目掉到第二行,而不是把文字挤成竖排 */
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  white-space: nowrap; /* 中文没有断词点,项目内部不许折行 */
+}
+
+/* 胶囊里的东西按原本大小排,不许压缩(压到极限就是竖排的根源) */
+.hud > * {
+  flex: none;
+}
+
+/* 左上:返回 + 任务号 + 面积 + 进度 */
+.hud-info {
+  top: 10px;
+  left: 10px;
+  max-width: min(560px, calc(100% - 340px));
+}
+
+.hud-info .back {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.hud-info .back:hover {
+  color: var(--accent);
+}
+
+.hud-info .id {
+  font-family: Consolas, monospace;
+}
+
+.hud-info .area {
+  margin: 0; /* 抵掉全局 .area 的上下 margin,胶囊里用 gap 控制间距 */
+  color: var(--muted);
+}
+
+/* 信息条里的进度条:小一号 */
+.hud-info .progress {
+  width: 110px;
+  height: 14px;
+}
+
+.hud-info .pct {
+  font-size: 11px;
+}
+
+.hud-info .error {
+  display: block;
+  margin: 0;
+  font-size: 11px;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 报错动辄一大段,胶囊里只留一行,悬停有完整 title 兜底 */
+}
+
+/* 右上:标签切换 + 导出按钮 */
+.hud-actions {
+  top: 10px;
+  right: 10px;
+}
+
+/* 导出按钮:无底描边的幽灵样式(别吃全局 button.primary 的
+   width:100%/蓝色填底,那会撑爆胶囊、和"全部无底"的风格打架),
+   悬停时才填色提示可点 */
+.hud-actions .btn.primary {
+  width: auto;
+  padding: 3px 12px;
+  font-size: 12px;
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hud-actions .btn.primary:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  filter: none;
+}
+
+/* 左上信息条下面排开的警告 */
+.hud-warning {
+  top: 44px;
+  left: 10px;
+  max-width: min(480px, calc(100% - 20px));
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--warn);
+}
+
+/* 导出提交成功后顶部居中的短暂提示("正在下载…"),几秒后自己消失 */
+.export-notice {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20; /* 压过左上信息条和右上按钮,别被挡住 */
+}
+
+.export-notice a {
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 标签:无底的文字标签,当前页用蓝色加粗区分 */
+.viewer-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.viewer-tabs button {
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.viewer-tabs button:hover {
+  color: var(--accent);
+}
+
+.viewer-tabs button.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 3D 面板:画布铺满,图层/视角浮在右下角 */
+
+.pane-3d .scene-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.layer-panel {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+  width: max-content;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 8px 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  font-size: 11px;
+}
+
+.layer-panel h3 {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 4px 0 1px;
+}
+
+.layer-panel h3:first-child {
+  margin-top: 1px;
+}
+
+/* 单列排布 */
+.layers {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.layer-row .chip {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* 勾选框/单选按钮缩一号,统一染成主题蓝 */
+.layer-panel input {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* 2D 面板 */
+
+.map2d-panel {
+  flex: 1;
+  position: relative;
+}
+
+/* 导出面板 */
+
+.pane-exports {
+  overflow-y: auto;
+  justify-content: center;
+}
+
+.export-jobs {
+  width: min(640px, 100%);
+  margin: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export-jobs .job {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.export-jobs .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.export-jobs .spacer {
+  flex: 1;
+}
+
+/* 每条导出记录的发起时间(行尾小字,悬停看完整时间) */
+.export-jobs .time {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.export-jobs .filename {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: Consolas, monospace;
+  margin: 4px 0 0;
+}
+
+/* ---- 导出对话框 ---- */
+
+.dialog-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog h2 {
+  font-size: 16px;
+  margin: 4px 0;
+}
+
+.dialog section h3 {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+
+.fmt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+button.fmt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+button.fmt small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+button.fmt .busy {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.dialog footer .tip {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---- 场景画布覆盖层 ---- */
+
+.scene-canvas {
+  position: relative;
+}
+
+.scene-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(28, 36, 48, 0.55);
+  color: #fff;
+}
+
+/* ---- 主页右下角实时状态 ---- */
+
+.backend-tip {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.dot.ws {
+  background: var(--ok);
+}
+
+.dot.sse {
+  background: var(--warn);
+}

@@ -1,0 +1,6 @@
+# 这些目录在镜像里都用不上,还特别大:
+# node_modules 是本机(Windows)装的,拷进去会盖掉容器里刚装好的 Linux 版;
+# dist 是本机构建产物,镜像里会重新构建;data 是本地跑的时候生成的数据。
+node_modules
+dist
+data
