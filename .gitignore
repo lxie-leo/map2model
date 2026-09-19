@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.env
+
+# 前端
+node_modules/
+dist/
+*.local
+
+# 运行时生成的数据(缓存、任务产物、数据库)
+backend/data/
+logs/
+*.log
+
+# 杂项
+.DS_Store
+Thumbs.db
+
+# 规划文档与记忆备份仅本地留存,不入库
+docs/
+
