@@ -1,0 +1,109 @@
+{
+  "version": 0.6,
+  "generator": "test fixture",
+  "elements": [
+    {
+      "type": "way", "id": 101,
+      "geometry": [
+        {"lat": 31.2350, "lon": 121.4900}, {"lat": 31.2350, "lon": 121.4905},
+        {"lat": 31.2355, "lon": 121.4905}, {"lat": 31.2355, "lon": 121.4900},
+        {"lat": 31.2350, "lon": 121.4900}
+      ],
+      "tags": {"building": "yes", "height": "25", "name": "Tall Tower"}
+    },
+    {
+      "type": "way", "id": 102,
+      "geometry": [
+        {"lat": 31.2360, "lon": 121.4910}, {"lat": 31.2360, "lon": 121.4916},
+        {"lat": 31.2364, "lon": 121.4916}, {"lat": 31.2364, "lon": 121.4910},
+        {"lat": 31.2360, "lon": 121.4910}
+      ],
+      "tags": {"building": "residential", "building:levels": "3", "name": "Flat Block"}
+    },
+    {
+      "type": "relation", "id": 201,
+      "members": [
+        {"type": "way", "ref": 1, "role": "outer", "geometry": [
+          {"lat": 31.2370, "lon": 121.4930}, {"lat": 31.2370, "lon": 121.4938},
+          {"lat": 31.2376, "lon": 121.4938}, {"lat": 31.2376, "lon": 121.4930},
+          {"lat": 31.2370, "lon": 121.4930}
+        ]},
+        {"type": "way", "ref": 2, "role": "inner", "geometry": [
+          {"lat": 31.2372, "lon": 121.4932}, {"lat": 31.2372, "lon": 121.4934},
+          {"lat": 31.2374, "lon": 121.4934}, {"lat": 31.2374, "lon": 121.4932},
+          {"lat": 31.2372, "lon": 121.4932}
+        ]}
+      ],
+      "tags": {"building": "yes", "height": "40", "name": "Donut Building"}
+    },
+    {
+      "type": "way", "id": 301,
+      "geometry": [
+        {"lat": 31.2340, "lon": 121.4900}, {"lat": 31.2380, "lon": 121.4950}
+      ],
+      "tags": {"highway": "primary", "bridge": "yes", "lanes": "4", "name": "Ring Rd"}
+    },
+    {
+      "type": "way", "id": 302,
+      "geometry": [
+        {"lat": 31.2355, "lon": 121.4920}, {"lat": 31.2380, "lon": 121.4920}
+      ],
+      "tags": {"highway": "residential", "lanes": "2"}
+    },
+    {
+      "type": "way", "id": 303,
+      "geometry": [
+        {"lat": 31.2350, "lon": 121.4940}, {"lat": 31.2360, "lon": 121.4945}
+      ],
+      "tags": {"highway": "residential", "tunnel": "yes"}
+    },
+    {
+      "type": "way", "id": 401,
+      "geometry": [
+        {"lat": 31.2340, "lon": 121.4940}, {"lat": 31.2380, "lon": 121.4940}
+      ],
+      "tags": {"railway": "rail", "name": "Metro Line"}
+    },
+    {
+      "type": "way", "id": 501,
+      "geometry": [
+        {"lat": 31.2342, "lon": 121.4902}, {"lat": 31.2382, "lon": 121.4902}
+      ],
+      "tags": {"waterway": "river", "width": "30", "name": "Big River"}
+    },
+    {
+      "type": "way", "id": 601,
+      "geometry": [
+        {"lat": 31.2370, "lon": 121.4905}, {"lat": 31.2370, "lon": 121.4915},
+        {"lat": 31.2380, "lon": 121.4915}, {"lat": 31.2380, "lon": 121.4905},
+        {"lat": 31.2370, "lon": 121.4905}
+      ],
+      "tags": {"natural": "water", "name": "Lake"}
+    },
+    {
+      "type": "way", "id": 701,
+      "geometry": [
+        {"lat": 31.2340, "lon": 121.4920}, {"lat": 31.2340, "lon": 121.4930},
+        {"lat": 31.2350, "lon": 121.4930}, {"lat": 31.2350, "lon": 121.4920},
+        {"lat": 31.2340, "lon": 121.4920}
+      ],
+      "tags": {"landuse": "grass"}
+    },
+    {
+      "type": "way", "id": 702,
+      "geometry": [
+        {"lat": 31.2360, "lon": 121.4955}, {"lat": 31.2360, "lon": 121.4965},
+        {"lat": 31.2370, "lon": 121.4965}, {"lat": 31.2370, "lon": 121.4955},
+        {"lat": 31.2360, "lon": 121.4955}
+      ],
+      "tags": {"leisure": "park", "name": "Central Park"}
+    },
+    {
+      "type": "way", "id": 801,
+      "geometry": [
+        {"lat": 31.2380, "lon": 121.4900}, {"lat": 31.2380, "lon": 121.4902}
+      ],
+      "tags": {"building": "yes"}
+    }
+    ]
+}

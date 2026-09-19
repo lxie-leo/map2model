@@ -1,0 +1,65 @@
+[project]
+name = "map2model-backend"
+version = "0.1.0"
+description = "map2model - OSM bbox to 2D map + 3D white-model scene, FastAPI backend"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "anyio>=4.4",
+    "httpx>=0.27",
+    "aiosqlite>=0.20",
+    "numpy>=1.26",
+    "shapely>=2.0",
+    "pyproj>=3.6",
+    "pillow>=10.4",
+    "trimesh>=4.4",
+    "scipy>=1.13",
+    "networkx>=3.2",
+    "ezdxf>=1.3",
+    "reportlab>=4.2",
+    "matplotlib>=3.9",
+    "simplekml>=1.3.6",
+    # trimesh 的三角化引擎(封底、挤出都靠它);3.5 起各平台都有 3.14 的包
+    "manifold3d>=3.0",
+    # trimesh 投影算多边形嵌套(判断哪个环是洞)用的空间索引,STL 封底
+    # 要走这条路,缺了它封底会被静默跳过;1.4.1 起有 3.14 的包
+    "rtree>=1.3",
+    # mapbox_earcut has no cp314 wheels; utils/geom.py falls back to a pure-python
+    # triangulator when the import fails, so this stays optional on 3.14+
+    "mapbox-earcut>=1.0.3 ; python_version < '3.14'",
+]
+
+[project.optional-dependencies]
+gis = ["geopandas>=0.14", "pyogrio>=0.9"]
+usd = ["usd-core>=24.3"]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008", "E501"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
