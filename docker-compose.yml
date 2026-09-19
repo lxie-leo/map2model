@@ -1,0 +1,30 @@
+# map2model 一键部署:后端 FastAPI + 前端静态托管(nginx)。
+# 用法: docker compose up -d --build
+# 之后访问 http://localhost:8080
+
+services:
+  backend:
+    build: ./backend
+    container_name: map2model-backend
+    restart: unless-stopped
+    # 数据库和任务产物放宿主机卷里,重建容器不丢数据
+    volumes:
+      - ./data:/app/data
+    environment:
+      - M2M_TASK_CONCURRENCY=2
+      # 容器里一般没有 Blender,fbx/dae 自动禁用;装了可挂载进去并指定路径
+      - M2M_BLENDER_PATH=auto
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/v1/system/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    container_name: map2model-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
