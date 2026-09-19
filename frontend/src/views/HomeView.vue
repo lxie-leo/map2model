@@ -13,9 +13,11 @@ import TaskList from '@/components/tasks/TaskList.vue'
 import { api, formatApiError } from '@/api/client'
 import type { BBox, PlaceResult, TaskOptions } from '@/api/types'
 import { useTasksStore } from '@/stores/tasks'
+import { useSettingsStore } from '@/stores/settings'
 import { ensureSubscribed, liveStatus } from '@/composables/useTaskEvents'
 
 const tasks = useTasksStore()
+const settings = useSettingsStore()
 
 const map = shallowRef<MlMap | null>(null)
 const bbox = ref<BBox | null>(null)
@@ -115,7 +117,8 @@ async function create(b: BBox, options: TaskOptions) {
 </script>
 
 <template>
-  <div class="home-view">
+  <!-- 窄窗口下侧栏是浮层,side-closed 表示收起(宽屏下这个 class 没有任何效果) -->
+  <div class="home-view" :class="{ 'side-closed': !settings.sideOpen }">
     <div class="map-wrap">
       <BaseMap @ready="onReady" />
       <MapSearch @pick="flyToPlace" />
@@ -126,9 +129,25 @@ async function create(b: BBox, options: TaskOptions) {
         @change="onRectChange"
         @exit="onRectExit"
       />
+      <!-- 侧栏收起后才出现的"面板"按钮,点开侧栏 -->
+      <button
+        v-if="!settings.sideOpen"
+        type="button"
+        class="hud side-fab"
+        title="展开侧栏"
+        @click="settings.sideOpen = true"
+      >☰ 面板</button>
     </div>
     <aside class="side">
-      <div class="side-brand">map2model</div>
+      <div class="side-brand">
+        map2model
+        <button
+          type="button"
+          class="side-x"
+          title="收起侧栏"
+          @click="settings.sideOpen = false"
+        >»</button>
+      </div>
       <p v-if="error" class="error">{{ error }}</p>
       <BboxPanel
         :bbox="bbox"

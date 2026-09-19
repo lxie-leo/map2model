@@ -18,6 +18,10 @@ export const useSettingsStore = defineStore('settings', {
 
     /** 后端能力(哪些格式可导出),进首页时加载一次 */
     capabilities: null as Capabilities | null,
+
+    /** 主页侧栏是否展开:窄窗口(≤900px)下侧栏是浮层,可收起给地图腾地方。
+     *  只存内存:去查看页再回来状态不丢,刷新回默认展开 */
+    sideOpen: true,
   }),
 
   actions: {

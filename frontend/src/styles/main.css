@@ -10,6 +10,9 @@
   --danger: #dc2626;
   --ok: #16a34a;
   --warn: #d97706;
+  /* 侧栏宽/内边距:窄屏档(文件末尾的媒体查询)会把它们改小 */
+  --side-w: 320px;
+  --side-pad: 12px;
 }
 
 * {
@@ -66,13 +69,6 @@ body {
   flex-direction: column;
 }
 
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px;
-  width: 100%;
-}
-
 /* ---- 主页:左地图右面板 ---- */
 
 .home-view {
@@ -88,9 +84,9 @@ body {
 }
 
 .home-view .side {
-  width: 320px;
+  width: var(--side-w);
   flex: none;
-  padding: 12px;
+  padding: var(--side-pad);
   border-left: 1px solid var(--line);
   background: var(--panel);
   overflow: hidden; /* 滚动只发生在下面的任务列表里,框选面板钉住不动 */
@@ -182,6 +178,13 @@ body {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.5px;
+}
+
+/* 侧栏的收起/展开按钮:宽屏下永远藏着(侧栏根本不缺地方),
+   只在窄窗口的结构档里现身(见文件末尾的媒体查询) */
+.side-x,
+.side-fab {
+  display: none;
 }
 
 /* ---- 框选面板(侧栏里空间金贵,不留大标题、行距收紧) ---- */
@@ -838,4 +841,101 @@ button.fmt .busy {
 
 .dot.sse {
   background: var(--warn);
+}
+
+/* ---- 窄窗口适配(只向下收窄,窗口够宽时一切照旧) ----
+   两档断点:≤1099px 收缩档(侧栏变窄一点,布局不动);
+   ≤899px 结构档(主页侧栏改成浮在地图上的可折叠面板)。
+   注意:CSS 变量进不了 @media 的条件里,要改断点值得把
+   下面两处 @media 的数字一起改。 */
+
+@media (max-width: 1099px) {
+  :root {
+    --side-w: 280px;
+    --side-pad: 10px;
+  }
+
+  /* 侧栏一窄,任务卡片第一行的内容就贴边了:放不下就掉到第二行,
+     别把任务号挤出屏幕 */
+  .task-card .row1 {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 899px) {
+  /* ---- 主页:侧栏浮在地图右边,可整体收起给地图腾地方 ---- */
+
+  .home-view {
+    position: relative; /* 给浮层侧栏当定位基准 */
+  }
+
+  .home-view .side {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    /* 和搜索框/信息胶囊同款玻璃底:让人看得出底下还有地图 */
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 收起后侧栏整个退场,只留地图右上角的"面板"按钮 */
+  .home-view.side-closed .side {
+    display: none;
+  }
+
+  /* 品牌行改成两端排布,右边挂收起按钮(宽屏下按钮藏着,这行看着没变) */
+  .side-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .side-x {
+    display: inline-block;
+    padding: 0 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 24px;
+    cursor: pointer;
+  }
+
+  .side-x:hover {
+    color: var(--accent);
+  }
+
+  /* 展开按钮借 .hud 的胶囊底,只在侧栏收着的时候现身 */
+  .side-fab {
+    top: 12px;
+    right: 12px;
+    z-index: 15;
+    cursor: pointer;
+  }
+
+  .home-view.side-closed .side-fab {
+    display: flex;
+  }
+
+  /* ---- 查看页:把浮层的空间预留收紧一点 ---- */
+
+  /* 右上操作条(标签+导出)实际占 255px 左右,预留从 340 收到 290,
+     窄窗口下左上信息条能多拿到 50px */
+  .hud-info {
+    max-width: min(560px, calc(100% - 290px));
+  }
+
+  /* 更窄的窗口里信息条会掉成两行(高约 52px),警告条往下挪,别被压住 */
+  .hud-warning {
+    top: 60px;
+  }
+
+  /* 保险丝:图层面板再宽也不许探出屏幕外 */
+  .layer-panel {
+    max-width: calc(100% - 20px);
+  }
 }
