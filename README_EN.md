@@ -19,6 +19,10 @@
 
 English | [简体中文](README.md)
 
+## Demo
+
+<video src="assets/demo.mp4" controls width="720"></video>
+
 ## What is this
 
 A web tool that runs on your own computer. Hold the left mouse button and drag a box on the map; the backend goes off to fetch OpenStreetMap data and terrain elevation for that patch of ground, and about a minute later you can:
