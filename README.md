@@ -21,7 +21,7 @@ English | [简体中文](README.zh-CN.md)
 
 ## Demo
 
-![Demo](assets/demo.gif)
+![Demo](assets/demo_en.gif)
 
 ## What is this
 
