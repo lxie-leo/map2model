@@ -93,6 +93,22 @@ docker compose up -d --build
 
 生成的文件都存在 `./data` 里，容器删了重建，东西还在。
 
+### Windows 桌面版（可选）
+
+完全不想装 Python 和 Node？直接去 [Releases](../../releases) 下载桌面版：解压 zip，双击 `map2model.exe` 就能用。独立窗口运行，17 种导出格式全带；机器上装了 Blender 的话 FBX / DAE 还会自动点亮——这是 Docker 镜像做不到的。
+
+几件事提前说清楚：
+
+- exe 没有代码签名，第一次运行会碰到 Windows SmartScreen，点**「更多信息」→「仍要运行」**即可。
+- Blender 装在自动探测找不到的地方（只认 `PATH` 和 `C:\Program Files\Blender Foundation\`）？在 exe 旁边建一个 `map2model.env` 文件写上 `M2M_BLENDER_PATH=D:\Blender\blender.exe`，可调的项见 `desktop/map2model.env.example`。
+- 数据（数据库、任务产物、日志）都放在 `%LOCALAPPDATA%\map2model`，删掉这个目录等于全部重置。
+- 程序需要联网——地图数据和地形瓦片都从网上取，和网页版一样。
+- 导出的文件落在系统默认的「下载」目录里（窗口内核是 WebView2）。
+- 系统缺 WebView2 运行时的话（Win10/11 很少见），会自动改成用默认浏览器打开。
+
+想自己从源码打包：`powershell -ExecutionPolicy Bypass -File desktop\build-desktop.ps1 -Smoke -Zip`。
+
+
 ## 能导出哪些格式
 
 | 分组 | 格式 | 状态 | 拿来干嘛 |

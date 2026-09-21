@@ -93,6 +93,21 @@ docker compose up -d --build
 
 Everything generated is stored under `./data`, so it survives container rebuilds.
 
+### Desktop app for Windows (optional)
+
+Don't want to set up Python and Node at all? Grab the desktop build from [Releases](../../releases): unzip, double-click `map2model.exe`, done. It opens in its own window, all 17 export formats included (FBX / DAE light up automatically if Blender is installed on that machine — something the Docker image can't do).
+
+A few things worth knowing:
+
+- The exe is not code-signed, so the first launch shows Windows SmartScreen: click **More info → Run anyway**.
+- Blender installed somewhere the auto-detect doesn't look (it checks `PATH` and `C:\Program Files\Blender Foundation\`)? Create a `map2model.env` file next to the exe with `M2M_BLENDER_PATH=D:\Blender\blender.exe` — see `desktop/map2model.env.example` for the knobs.
+- Your data (database, task outputs, logs) lives in `%LOCALAPPDATA%\map2model`. Delete that folder to reset everything.
+- The app needs internet access — it fetches map data and terrain tiles from the network, like the web version does.
+- Exports are downloaded to your browser's usual download folder (the window is WebView2-based).
+- If the system lacks the WebView2 runtime (rare on Windows 10/11), the app falls back to opening in your default browser instead.
+
+To build the exe yourself from source: `powershell -ExecutionPolicy Bypass -File desktop\build-desktop.ps1 -Smoke -Zip`.
+
 ## Export formats
 
 | Group | Format | Status | Good for |
