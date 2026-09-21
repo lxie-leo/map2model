@@ -20,6 +20,7 @@ from app.core.events import EventBroker
 from app.core.task_manager import TaskManager
 from app.db import Database
 from app.logging_conf import setup_logging
+from app.static_host import mount_static
 
 logger = logging.getLogger("app")
 
@@ -65,6 +66,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(api_router, prefix=settings.api_prefix)
+    # 桌面版开的静态伺服(挂在最后,挡不住上面的 API 路由);网页版默认关闭,等于没这行
+    mount_static(app, settings)
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:

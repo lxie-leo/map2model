@@ -51,6 +51,12 @@ class Settings(BaseSettings):
     blender_path: str = "auto"  # auto = 自己去找 Blender,找不到就禁用 FBX/DAE
     data_dir: Path = Path("data")
 
+    # --- 桌面版单进程伺服(网页版不设这两个变量,行为不变) ---
+    # 桌面版让后端自己把 frontend/dist 也伺服了,前端和 API 同源,不用 nginx;
+    # Docker/nginx 路径不开这个开关,静态文件照旧由 nginx 托管
+    serve_static: bool = False
+    static_dir: Path | None = None  # 指向 vite build 出来的 dist 目录
+
     @property
     def cache_dir(self) -> Path:
         return self.data_dir / "cache" / "overpass"
