@@ -370,6 +370,9 @@ def main() -> int:
         try:
             import webview
 
+            # 默认是关的:WebView2 的下载请求会被 pywebview 静默取消,
+            # 表现就是点「下载」毫无反应。打开后走「另存为」对话框(默认在下载目录)
+            webview.settings["ALLOW_DOWNLOADS"] = True
             webview.create_window(
                 "map2model", url, width=1440, height=900, min_size=(1024, 640)
             )

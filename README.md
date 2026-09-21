@@ -103,7 +103,7 @@ A few things worth knowing:
 - Blender installed somewhere the auto-detect doesn't look (it checks `PATH` and `C:\Program Files\Blender Foundation\`)? Create a `map2model.env` file next to the exe with `M2M_BLENDER_PATH=D:\Blender\blender.exe` — see `desktop/map2model.env.example` for the knobs.
 - Your data (database, task outputs, logs) lives in `%LOCALAPPDATA%\map2model`. Delete that folder to reset everything.
 - The app needs internet access — it fetches map data and terrain tiles from the network, like the web version does.
-- Exports are downloaded to your browser's usual download folder (the window is WebView2-based).
+- Clicking Download opens a save-file dialog, starting in your system Downloads folder.
 - If the system lacks the WebView2 runtime (rare on Windows 10/11), the app falls back to opening in your default browser instead.
 
 To build the exe yourself from source: `powershell -ExecutionPolicy Bypass -File desktop\build-desktop.ps1 -Smoke -Zip`.

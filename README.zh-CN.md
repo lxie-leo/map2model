@@ -103,7 +103,7 @@ docker compose up -d --build
 - Blender 装在自动探测找不到的地方（只认 `PATH` 和 `C:\Program Files\Blender Foundation\`）？在 exe 旁边建一个 `map2model.env` 文件写上 `M2M_BLENDER_PATH=D:\Blender\blender.exe`，可调的项见 `desktop/map2model.env.example`。
 - 数据（数据库、任务产物、日志）都放在 `%LOCALAPPDATA%\map2model`，删掉这个目录等于全部重置。
 - 程序需要联网——地图数据和地形瓦片都从网上取，和网页版一样。
-- 导出的文件落在系统默认的「下载」目录里（窗口内核是 WebView2）。
+- 点「下载」会弹出「另存为」对话框,默认位置是系统「下载」目录。
 - 系统缺 WebView2 运行时的话（Win10/11 很少见），会自动改成用默认浏览器打开。
 
 想自己从源码打包：`powershell -ExecutionPolicy Bypass -File desktop\build-desktop.ps1 -Smoke -Zip`。
