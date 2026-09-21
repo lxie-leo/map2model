@@ -34,14 +34,23 @@ def export_tiles3d(ctx: ExportContext) -> str:
     ctx.on_progress(0.05, "loading hub.glb")
     scene = load_hub(ctx)
 
-    # 1) hub 里是 Y-up(迁就 Blender),这里换回 Z-up:Y/Z 互换,方向转一下就行。
-    #    只是转方向不是镜像,三角形顶点顺序原样保留,面才朝外
+    # 1) 写进 glb 的顶点保持 hub 的 Y-up 原样——3D Tiles 1.1 规定 glTF 内容
+    #    就用 glTF 自己的 Y-up 约定,Cesium 加载时会自动转到地球坐标。
+    #    (早期版本这里手动换过 Z-up,结果模型在 Cesium 里躺倒 90°、飞出
+    #    包围盒被剔除,整个场景什么都看不见)
+    #    切分用的重心和包围盒才要 Z-up(它们属于瓦片坐标系:东/北/上),
+    #    在下面单独换算,和写进 glb 的顶点分开算
     layer_data: dict[str, tuple[np.ndarray, np.ndarray]] = {}
     for name in scene.geometry:
         mesh = scene.geometry[name]
-        v = mesh.vertices[:, [0, 2, 1]].copy()
-        v[:, 1] *= -1
-        layer_data[name] = (v, mesh.faces)
+        layer_data[name] = (np.asarray(mesh.vertices), mesh.faces)
+
+    def to_zup(pts: np.ndarray) -> np.ndarray:
+        # Y-up(x东/y上/z南)→ Z-up(x东/y北/z上):Y/Z 互换再翻北向,
+        # 只是转方向不是镜像,面朝向不变
+        p = pts[:, [0, 2, 1]].copy()
+        p[:, 1] *= -1
+        return p
 
     # 2) 给每个三角形记一笔:中心点在哪、属于哪个图层、是第几张脸(切分用)
     all_centroids: list[np.ndarray] = []
@@ -50,7 +59,7 @@ def export_tiles3d(ctx: ExportContext) -> str:
     for name, (v, f) in layer_data.items():
         if len(f) == 0:
             continue
-        c = v[f].mean(axis=1)          # 每个三角形三个顶点的平均位置,当它的"重心"
+        c = to_zup(v[f].mean(axis=1))  # 每个三角形重心的平均位置,换到 Z-up 再记
         all_centroids.append(c[:, :2])  # 切分只看平面上落在哪,不管高度
         tri_layer.extend([name] * len(f))
         tri_face.extend(range(len(f)))
@@ -61,8 +70,9 @@ def export_tiles3d(ctx: ExportContext) -> str:
     tri_face_arr = np.asarray(tri_face)
     total = len(tri_layer_arr)
 
-    zmin = float(min(v[:, 2].min() for v, _ in layer_data.values()))
-    zmax = float(max(v[:, 2].max() for v, _ in layer_data.values()))
+    # 高度范围也在 Z-up 里量(就是 hub 的 y 轴)
+    zmin = float(min(v[:, 1].min() for v, _ in layer_data.values()))
+    zmax = float(max(v[:, 1].max() for v, _ in layer_data.values()))
 
     ctx.on_progress(0.15, f"quadtree split ({total} triangles)")
     tiles_dir = ctx.export_dir / "tiles"
