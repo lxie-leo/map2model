@@ -32,12 +32,6 @@ const error = ref<string | null>(null)
 // 地图上实际画的框:自己刚框的优先,其次才是任务回显
 const displayBox = computed(() => bbox.value ?? highlight.value)
 
-const STATUS_TEXT = {
-  ws: '实时通道已连接',
-  sse: '实时通道:备用模式',
-  offline: '正在连接实时通道…',
-} as const
-
 function onReady(m: MlMap) {
   map.value = m
 }
@@ -134,9 +128,9 @@ async function create(b: BBox, options: TaskOptions) {
         v-if="!settings.sideOpen"
         type="button"
         class="hud side-fab"
-        title="展开侧栏"
+        :title="$t('home.openSide')"
         @click="settings.sideOpen = true"
-      >☰ 面板</button>
+      >{{ $t('home.panel') }}</button>
     </div>
     <aside class="side">
       <div class="side-brand">
@@ -156,7 +150,7 @@ async function create(b: BBox, options: TaskOptions) {
         <button
           type="button"
           class="side-x"
-          title="收起侧栏"
+          :title="$t('home.closeSide')"
           @click="settings.sideOpen = false"
         >»</button>
       </div>
@@ -174,7 +168,7 @@ async function create(b: BBox, options: TaskOptions) {
       </div>
       <div class="backend-tip">
         <span class="dot" :class="liveStatus"></span>
-        {{ STATUS_TEXT[liveStatus] }}
+        {{ $t(`conn.${liveStatus}`) }}
       </div>
     </aside>
   </div>

@@ -44,3 +44,10 @@ export function applyLocaleSideEffects() {
     // node 环境没有 document
   }
 }
+
+/** 枚举标签的兜底翻译:key(如 task.stage.BUILD_MESH)有文案就翻,
+ *  没有(后端新加了枚举、文案还没跟上)就显示枚举值本身。
+ *  模板里随时可用:i18n.global.t 读的是 ref,切语言会触发重渲染 */
+export function tEnum(key: string): string {
+  return i18n.global.te(key) ? i18n.global.t(key) : key.slice(key.lastIndexOf('.') + 1)
+}

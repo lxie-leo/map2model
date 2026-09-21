@@ -7,6 +7,8 @@ import { api } from '@/api/client'
 import { urls } from '@/api/client'
 import { useExportsStore } from '@/stores/exports'
 import { ensureSubscribed } from '@/composables/useTaskEvents'
+import { tEnum } from '@/locales'
+import { fmtDateTime, fmtShortDateTime } from '@/utils/datetime'
 
 const props = defineProps<{ taskId: string }>()
 
@@ -35,37 +37,23 @@ async function retry(format: string) {
   }
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  QUEUED: '排队中',
-  RUNNING: '导出中',
-  COMPLETED: '完成',
-  FAILED: '失败',
-  CANCELLED: '取消',
-}
-
-/** 简短时间(月-日 时:分):下载列表里一屏好多条,全写年份太占地方 */
-function fmtTime(iso: string): string {
-  const d = new Date(iso)
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
-}
 </script>
 
 <template>
   <div class="export-jobs">
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="!store.byTask[taskId]?.length" class="empty">
-      还没有导出记录,点右上"导出"按钮选格式
+      {{ $t('export_.empty') }}
     </p>
 
     <div v-for="job in store.byTask[taskId]" :key="job.id" class="job" :data-status="job.status">
       <div class="row">
         <strong>{{ job.format }}</strong>
-        <span class="status">{{ STATUS_LABEL[job.status] ?? job.status }}</span>
+        <span class="status">{{ tEnum(`export_.status.${job.status}`) }}</span>
         <span v-if="job.status === 'RUNNING'">{{ Math.round(job.progress * 100) }}%</span>
         <span class="spacer"></span>
-        <span class="time" :title="new Date(job.created_at).toLocaleString('zh-CN', { hour12: false })">
-          {{ fmtTime(job.created_at) }}
+        <span class="time" :title="fmtDateTime(job.created_at)">
+          {{ fmtShortDateTime(job.created_at) }}
         </span>
         <a
           v-if="job.status === 'COMPLETED'"
@@ -73,7 +61,7 @@ function fmtTime(iso: string): string {
           :href="urls.exportDownload(job.id)"
           :download="job.filename ?? ''"
         >
-          下载
+          {{ $t('export_.download') }}
         </a>
         <button
           v-if="job.status === 'FAILED'"
@@ -81,7 +69,7 @@ function fmtTime(iso: string): string {
           :disabled="retrying !== null"
           @click="retry(job.format)"
         >
-          {{ retrying === job.format ? '重试中…' : '重试' }}
+          {{ retrying === job.format ? $t('export_.retrying') : $t('export_.retry') }}
         </button>
       </div>
       <div v-if="job.status === 'RUNNING' || job.status === 'QUEUED'" class="progress">

@@ -7,6 +7,7 @@ import { api, formatApiError } from '@/api/client'
 import { useTasksStore } from '@/stores/tasks'
 import { ensureSubscribed } from '@/composables/useTaskEvents'
 import { defaultVisibility, LAYERS, type LayerKey } from '@/three/layers'
+import { tEnum, i18n } from '@/locales'
 import ViewerTabs from '@/components/viewer/ViewerTabs.vue'
 import SceneCanvas from '@/components/viewer/SceneCanvas.vue'
 import LayerPanel from '@/components/viewer/LayerPanel.vue'
@@ -58,14 +59,6 @@ watch(
   },
 )
 
-const STAGE_LABELS: Record<string, string> = {
-  FETCH_OVERPASS: '拉取 OSM 数据',
-  FETCH_TERRAIN: '拉取地形高程',
-  PARSE_VECTOR: '解析矢量要素',
-  BUILD_MESH: '构建三维网格',
-  WRITE_HUB: '写出模型文件',
-}
-
 const running = computed(
   () => task.value?.status === 'QUEUED' || task.value?.status === 'RUNNING',
 )
@@ -82,7 +75,7 @@ const notice = ref<string | null>(null)
 let noticeTimer: ReturnType<typeof setTimeout> | null = null
 
 function showDownloadNotice() {
-  notice.value = '正在下载,请进入下载页面查看进度'
+  notice.value = i18n.global.t('export_.downloadNotice')
   if (noticeTimer) clearTimeout(noticeTimer)
   noticeTimer = setTimeout(() => (notice.value = null), 4000)
 }
@@ -99,7 +92,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="viewer-view">
-    <p v-if="error" class="error center-hint">{{ error }} <router-link to="/">返回地图</router-link></p>
+    <p v-if="error" class="error center-hint">{{ error }} <router-link to="/">{{ $t('viewer.back') }}</router-link></p>
 
     <template v-else-if="task">
       <div class="viewer-body" :data-tab="tab">
@@ -115,11 +108,11 @@ onBeforeUnmount(() => {
             <!-- 图层/视角浮在场景右下角 -->
             <LayerPanel v-model:visibility="visibility" v-model:view-mode="viewMode" />
           </template>
-          <p v-else class="hint">任务完成后可查看 3D 模型</p>
+          <p v-else class="hint">{{ $t('viewer.wait3d') }}</p>
         </div>
         <div v-show="tab === 'map2d'" class="pane">
           <Map2DPanel v-if="task.status === 'COMPLETED'" :key="id" :task-id="id" :bbox="task.bbox" />
-          <p v-else class="hint">任务完成后可查看 2D 制图</p>
+          <p v-else class="hint">{{ $t('viewer.wait2d') }}</p>
         </div>
         <div v-show="tab === 'exports'" class="pane pane-exports">
           <ExportJobList :key="id" :task-id="id" />
@@ -127,14 +120,14 @@ onBeforeUnmount(() => {
 
         <!-- 没有顶栏:任务信息浮在左上,标签和导出按钮浮在右上 -->
         <div class="hud hud-info">
-          <router-link to="/" class="back">← 返回地图</router-link>
-          <span class="id">任务 {{ task.id.slice(0, 10) }}</span>
+          <router-link to="/" class="back">{{ $t('viewer.back') }}</router-link>
+          <span class="id">{{ $t('task.idLabel', { id: task.id.slice(0, 10) }) }}</span>
           <span class="area">{{ task.area_km2.toFixed(3) }} km²</span>
           <div v-if="running" class="progress">
             <div class="bar" :style="{ width: task.progress + '%' }"></div>
             <span class="pct">
               {{ Math.round(task.progress) }}% ·
-              {{ task.stage ? (STAGE_LABELS[task.stage] ?? task.stage) : '排队中' }}
+              {{ task.stage ? tEnum(`task.stage.${task.stage}`) : $t('task.status.QUEUED') }}
             </span>
           </div>
           <span v-else-if="task.error" class="error" :title="task.error">{{ task.error }}</span>
@@ -143,21 +136,21 @@ onBeforeUnmount(() => {
         <div class="hud hud-actions">
           <ViewerTabs v-model:tab="tab" />
           <button class="btn primary" :disabled="running" @click="showExportDialog = true">
-            导出
+            {{ $t('export_.exportButton') }}
           </button>
         </div>
 
         <!-- 导出提交成功后顶部的短暂提示,带直达下载页的入口 -->
         <div v-if="notice" class="hud export-notice">
           ⬇ {{ notice }}
-          <a @click="goDownloads">进入下载页</a>
+          <a @click="goDownloads">{{ $t('export_.goDownloads') }}</a>
         </div>
 
         <p v-for="w in task.warnings" :key="w" class="hud hud-warning">⚠ {{ w }}</p>
       </div>
     </template>
 
-    <p v-else class="hint center-hint">加载任务中…</p>
+    <p v-else class="hint center-hint">{{ $t('viewer.loading') }}</p>
 
     <ExportDialog
       v-if="showExportDialog"
