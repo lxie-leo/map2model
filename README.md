@@ -2,7 +2,7 @@
 
 # map2model
 
-**在地图上框一块地，生成它的 2D 彩色地图和 3D 白模，再导出成 17 种格式，拿去 Blender / AutoCAD / QGIS / Cesium 里用。**
+**Draw a box on the map, get a color 2D map and a 3D white-model scene of that area, export to 17 formats, and take them into Blender / AutoCAD / QGIS / Cesium.**
 
 ![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
@@ -17,200 +17,169 @@
 
 ---
 
-[English](README_EN.md) | 简体中文
+English | [简体中文](README.zh-CN.md)
 
-## 演示
+## Demo
 
-![演示](assets/demo.gif)
+![Demo](assets/demo.gif)
 
-## 这是什么
+## What is this
 
-一个跑在自己电脑上的网页工具。你在地图上按住左键拖一个框，后台去把这块地的 OpenStreetMap 数据和地形高程抓回来，一分钟后你就能：
+A web tool that runs on your own computer. Hold the left mouse button and drag a box on the map; the backend goes off to fetch OpenStreetMap data and terrain elevation for that patch of ground, and about a minute later you can:
 
-- 看 **2D 彩色地图** —— 建筑、道路、铁路、水系、绿地分颜色画好，看着跟纸质地图似的
-- 看 **3D 白模** —— 楼房按真实高度立起来，地面有起伏，六个图层想开就开想关就关
-- **导出成 17 种格式**，丢进你顺手的软件接着干活
+- View a **2D color map** — buildings, roads, railways, water and green areas drawn in their own colors, like a proper paper map
+- View a **3D white model** — buildings stand up at their real heights, the ground undulates, six layers you can toggle on and off
+- **Export to 17 formats** and carry on in whatever software you like
 
-数据全部来自免费公开渠道（OSM + AWS 地形瓦片），不用注册账号，不用申请密钥。
+All data comes from free public sources (OSM + AWS terrain tiles). No account, no API keys.
 
-## 生成过程
+## How it works
 
 ```
- 框选范围 ──► 抓 OSM 数据 ──► 抓地形高程 ──► 解析换算 ──► 建模型 ──► 出成果
-    │                                                    │
-    │                                       ┌────────────┼────────────┐
-    │                                       ▼            ▼            ▼
-    └── 进度实时推到网页                hub.glb     preview.geojson   meta.json
-                                              │            │
-                                        3D 各格式      2D/GIS 各格式
+ draw a box ──► fetch OSM ──► fetch terrain ──► parse ──► build ──► results
+     │                                                        │
+     │                                          ┌─────────────┼─────────────┐
+     │                                          ▼             ▼             ▼
+     └── progress streamed live            hub.glb    preview.geojson    meta.json
+                                                │             │
+                                          3D formats   2D/GIS formats
 ```
 
-一共五步，每一步进行到哪了网页上都能看到，中途随时可以取消。
+Five steps in total; the web page shows where each one is at, and you can cancel at any time.
 
-## 有哪些功能
+## Features
 
-- 在地图上直接拖框选地，面积实时显示，框太大（超过 25 km²）会拦下来不让选
-- 六类要素统一配色：SVG / PDF 是矢量的，放大多少倍都不糊；PNG / DXF / GeoJSON 各取所需
-- 楼房按 `height` 拉伸，没填高度的按楼层数估算；道路铁路按等级给宽度；地形照着 AWS 高程数据做出起伏
-- 3D 格式六种（GLB / OBJ / STL / USDZ / FBX / DAE），2D 四种（SVG / PDF / PNG / DXF），GIS 七种（GeoJSON / GPKG / SHP / KML / KMZ / CityJSON / 3D Tiles）
-- 「上」的方向提前替你转好了：GLB / USDZ 的上是 Y（Blender、three.js 的习惯），OBJ / STL / CityJSON 的上是 Z（CAD 的习惯），3D Tiles 自带经纬度定位，扔进 Cesium 就落在原地
-- 网络不好不至于白等：抓数据换着镜像挨个试；地形实在抓不到就改用平地，提醒你一声，任务不中断
-- 进度用 WebSocket 推，断网自动重连，实在连不上就换个法子接着收
-- 图层的名字一路保留到底：GLB 里的节点就叫 TERRAIN、BUILDING 这些，进了 Blender 图层面板直接对得上
+- Drag a box straight on the map, area shown live; boxes that are too big (over 25 km²) get rejected
+- Six feature classes with one consistent palette: SVG / PDF are vector and stay sharp at any zoom; PNG / DXF / GeoJSON each serve their own purpose
+- Buildings extruded by their `height` tag, estimated from floor count when missing; roads and railways get widths by class; terrain follows AWS elevation data
+- Six 3D formats (GLB / OBJ / STL / USDZ / FBX / DAE), four 2D formats (SVG / PDF / PNG / DXF), seven GIS formats (GeoJSON / GPKG / SHP / KML / KMZ / CityJSON / 3D Tiles)
+- "Up" is already sorted for you: GLB / USDZ use Y-up (Blender, three.js convention), OBJ / STL / CityJSON use Z-up (CAD convention), and 3D Tiles carry their own georeference — drop them into Cesium and they land in place
+- Flaky networks don't leave you hanging: data fetching rotates through mirrors; if terrain can't be fetched at all it falls back to flat ground, tells you why, and the task keeps going
+- Progress is pushed over WebSocket, reconnects automatically, and falls back to another channel if WebSocket won't connect at all
+- Layer names survive the whole way: nodes inside the GLB are literally named TERRAIN, BUILDING and so on, so they line up with the layer panel in Blender
 
-## 快速开始
+## Getting started
 
-### 先装好这些
+### Prerequisites
 
-| 软件 | 版本 | 干嘛用 |
+| Software | Version | Why |
 | --- | --- | --- |
-| Python | ≥ 3.11（推荐 3.12 / 3.13） | 跑后端 |
-| Node.js | ≥ 20 | 跑前端 |
-| Blender（可选） | 近期版本都行 | 只有 FBX / DAE 两种格式用得上 |
+| Python | ≥ 3.11 (3.12 / 3.13 recommended) | runs the backend |
+| Node.js | ≥ 20 | runs the frontend |
+| Blender (optional) | any recent version | only needed for FBX / DAE |
 
-### 开跑
+### Run it
 
-Windows 下两条命令：
+Two commands on Windows:
 
 ```powershell
-# 1. 起后端（第一次会自动建虚拟环境、装依赖）
+# 1. Start the backend (first run creates the venv and installs dependencies)
 powershell -ExecutionPolicy Bypass -File scripts\dev-backend.ps1
 
-# 2. 另开一个窗口，起前端
+# 2. In another window, start the frontend
 powershell -ExecutionPolicy Bypass -File scripts\dev-frontend.ps1
 ```
 
-打开 **http://127.0.0.1:5173**，拖个框，点「生成」。
+Open **http://127.0.0.1:5173**, drag a box, hit "Generate".
 
-> 嫌开两个窗口麻烦就跑 `scripts\run_all.ps1`；拿不准环境缺什么，先跑 `scripts\check_env.ps1` 查一遍。
+> Hate two windows? Run `scripts\run_all.ps1`. Not sure your environment is complete? Run `scripts\check_env.ps1` first.
 
-### 用 Docker 跑（可选）
+### Run with Docker (optional)
 
 ```bash
 docker compose up -d --build
-# 打开 http://localhost:8080
+# open http://localhost:8080
 ```
 
-生成的文件都存在 `./data` 里，容器删了重建，东西还在。
+Everything generated is stored under `./data`, so it survives container rebuilds.
 
-## 能导出哪些格式
+## Export formats
 
-| 分组 | 格式 | 状态 | 拿来干嘛 |
+| Group | Format | Status | Good for |
 | --- | --- | :-: | --- |
-| 3D | **GLB** | ✅ | 首选。Blender、three.js 直接打开，图层名都在 |
-| 3D | OBJ | ✅ | 建模软件通用，上是 Z |
-| 3D | STL | ✅ | 3D 打印，单位毫米 |
-| 3D | USDZ | ✅ | 发到 iPhone，用文件 App 就能 AR 预览 |
-| 3D | FBX | ⚠️ 要装 Blender | Unity / Unreal / Maya |
-| 3D | DAE | ⚠️ 要装 Blender | 老牌 3D 交换格式 |
-| 2D | SVG | ✅ | 矢量地图，网页、设计软件里随便放大 |
-| 2D | PDF | ✅ | 打印 |
-| 2D | PNG | ✅ | 图片快照 |
-| 2D | DXF | ✅ | AutoCAD，图层按 `M2M_*` 分好 |
-| GIS | GeoJSON | ✅ | 最通用的矢量格式，谁都能读 |
-| GIS | GPKG | ✅ | 一个文件装多层数据，QGIS / ArcGIS 直接开 |
-| GIS | SHP | ✅ | 传统 GIS 格式，按图层打包成 zip |
-| GIS | KML / KMZ | ✅ | Google Earth，楼房是立起来的 |
-| GIS | CityJSON | ✅ | 城市模型标准（2.0 版） |
-| GIS | 3D Tiles | ✅ | Cesium 加载大场景用，自带地球定位 |
+| 3D | **GLB** | ✅ | the default choice. Opens directly in Blender and three.js, layer names included |
+| 3D | OBJ | ✅ | universal in modeling tools, Z-up |
+| 3D | STL | ✅ | 3D printing, millimeters |
+| 3D | USDZ | ✅ | send to an iPhone, preview in AR with the Files app |
+| 3D | FBX | ⚠️ needs Blender | Unity / Unreal / Maya |
+| 3D | DAE | ⚠️ needs Blender | classic 3D interchange format |
+| 2D | SVG | ✅ | vector map, scale it as much as you like |
+| 2D | PDF | ✅ | printing |
+| 2D | PNG | ✅ | image snapshot |
+| 2D | DXF | ✅ | AutoCAD, layers pre-sorted as `M2M_*` |
+| GIS | GeoJSON | ✅ | the most universal vector format, everything reads it |
+| GIS | GPKG | ✅ | multiple layers in one file, opens straight in QGIS / ArcGIS |
+| GIS | SHP | ✅ | traditional GIS format, zipped per layer |
+| GIS | KML / KMZ | ✅ | Google Earth, buildings extruded |
+| GIS | CityJSON | ✅ | city modeling standard (version 2.0) |
+| GIS | 3D Tiles | ✅ | big scenes in Cesium, georeferenced |
 
-✅ = 装完就能用；⚠️ = 电脑上得装 Blender（程序会自己去 `C:\Program Files\Blender Foundation\` 底下找）。
+✅ = works out of the box; ⚠️ = you need Blender installed (the program looks under `C:\Program Files\Blender Foundation\` by itself; on other platforms set `M2M_BLENDER_PATH`).
 
-哪种格式能不能用，界面上的按钮会照实显示：能用的亮着，不能用的灰着，鼠标放上去告诉你缺什么。
+Buttons in the UI tell the truth about availability: usable ones are lit, the rest are grey, and hovering tells you what's missing.
 
-## 图层和颜色
+## Layers and colors
 
-2D 和 3D 六个图层叫一样的名字、用一样的颜色：
+The six layers use the same names and colors in 2D and 3D:
 
-| 图层 | 颜色 | 说明 |
+| Layer | Color | Notes |
 | --- | --- | --- |
-| Terrain | `#c8c3ba` | 地面（有高程数据时带起伏） |
-| Green | `#b7d6a8` | 公园、草地、树林 |
-| Water | `#a8cfe8` | 河流、湖泊 |
-| Building | `#ded7cb` | 楼房，按真实或估算的高度立起来 |
-| Road | `#a8a8a8` | 道路，主路次路宽度不一样 |
-| Railway | `#6b6f73` | 铁路 |
+| Terrain | `#c8c3ba` | the ground (undulates when elevation data is available) |
+| Green | `#b7d6a8` | parks, grass, woods |
+| Water | `#a8cfe8` | rivers, lakes |
+| Building | `#ded7cb` | buildings, extruded to real or estimated heights |
+| Road | `#a8a8a8` | roads, main and side roads get different widths |
+| Railway | `#6b6f73` | railways |
 
-## 配置
+## Configuration
 
-不改任何配置就能跑。想调的话，改这些环境变量（都带 `M2M_` 前缀）：
+It runs with zero configuration. To tweak, set these environment variables (all prefixed `M2M_`):
 
-| 变量 | 默认 | 说明 |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `M2M_DATA_DIR` | `data` | 存数据库和生成文件的地方 |
-| `M2M_OVERPASS_ENDPOINTS` | 内置一排镜像 | 逗号隔开，从前往后挨个试 |
-| `M2M_MAX_BBOX_AREA_KM2` | `25` | 一次最多框多大 |
-| `M2M_MAX_BUILDINGS` | `20000` | 一次最多处理多少栋楼 |
-| `M2M_TASK_CONCURRENCY` | `2` | 同时跑几个任务 |
-| `M2M_BLENDER_PATH` | `auto` | Blender 装在哪；`auto` = 自己去找 |
+| `M2M_DATA_DIR` | `data` | where the database and generated files live |
+| `M2M_OVERPASS_ENDPOINTS` | a built-in list | comma-separated, tried front to back |
+| `M2M_MAX_BBOX_AREA_KM2` | `25` | max area per task |
+| `M2M_MAX_BUILDINGS` | `20000` | max buildings per task |
+| `M2M_TASK_CONCURRENCY` | `2` | how many tasks run at once |
+| `M2M_BLENDER_PATH` | `auto` | where Blender is; `auto` = go find it |
 
-想加料可以装可选依赖：`pip install -e ".[gis,usd]"` 让 GPKG 走 geopandas、USDZ 走官方库；`pip install -e ".[dev]"` 装开发和测试工具。不装也照样跑，界面上照实显示哪些可用。
+Optional extras: `pip install -e ".[gis,usd]"` makes GPKG go through geopandas and USDZ through the official library; `pip install -e ".[dev]"` installs development and test tools. Everything works without them — the UI just reports what's available.
 
-## 常见问题
+## FAQ
 
-**Q：npm 装依赖老是报错，文件还损坏？**
-有些 Windows 电脑上 npm 解包会被杀毒软件搅和（报 `TAR_ENTRY_ERROR`，文件变成零字节）。这个项目统一用 pnpm 就没事：`corepack pnpm install`。
+**Q: npm keeps failing with corrupt files?**
+On some Windows machines antivirus interferes with npm's unpacking (`TAR_ENTRY_ERROR`, zero-byte files). This project uses pnpm throughout and has no such trouble: `corepack pnpm install`.
 
-**Q：生成一次要多久？**
-时间主要花在从 Overpass 拉数据：0.3 km² 的城区大概一分钟，地盘越大越慢。同一块地第二次生成直接用上次存的，几乎秒出。
+**Q: How long does a run take?**
+Most time goes to pulling data from Overpass: about a minute for 0.3 km² of urban area, slower the bigger the box. The second run on the same area hits the cache and comes back almost instantly.
 
-**Q：怎么我的地形是平的？**
-有的网络访问不了 AWS 的地形瓦片，这时程序会自动改用平地，并在任务的警告里写明原因。挂个代理或换个网络就有了。
+**Q: Why is my terrain flat?**
+Some networks can't reach AWS terrain tiles; the program then falls back to flat ground and says why in the task's warnings. Use a proxy or another network and it comes back.
 
-**Q：FBX / DAE 按钮是灰的？**
-这两种格式要借 Blender 帮忙转一手。[装个 Blender](https://www.blender.org/download/)（免费），重启后端就亮了。其它 15 种格式不受影响。
+**Q: FBX / DAE buttons are grey?**
+Those two formats borrow a hand from Blender. [Install Blender](https://www.blender.org/download/) (free) and restart the backend — they light up. The other 15 formats are unaffected.
 
-**Q：模型进了 Blender 是躺着的？**
-这不是坏了。GLB 里「上」是 Y 方向，Blender 打开 GLB 时会自动摆正；如果你导入的是 OBJ（上是 Z）发现躺着，手动转一下就好。
+**Q: The model lies on its side in Blender?**
+That's not a bug. "Up" inside a GLB is Y, and Blender straightens it automatically on open. If you imported OBJ (Z-up) and it looks lying down, rotate it manually.
 
-## 开发
+## Development
 
 ```powershell
-# 后端测试（53 个用例）
+# backend tests (53 cases)
 cd backend; .venv\Scripts\python.exe -m pytest -q
 
-# 前端类型检查 + 单元测试
+# frontend type check + unit tests
 cd frontend; corepack pnpm typecheck; corepack pnpm test
 
-# 前端打包
+# frontend build
 cd frontend; corepack pnpm build
 ```
 
-用 Python 3.14 的话注意：`mapbox-earcut` 还没出支持 3.14 的安装包，程序会自动换用自己写的切三角形代码，结果一样，就是慢一点。Docker 镜像固定用 3.12，没这个问题。
+On Python 3.14: `mapbox-earcut` has no 3.14 package yet, so the program automatically switches to its own triangulation code — same results, just slower. The Docker image is pinned to 3.12 and doesn't have this issue.
 
-## 目录结构
+## License
 
-```
-map2model/
-├── backend/
-│   ├── app/
-│   │   ├── api/            # 接口：tasks / exports / system / ws
-│   │   ├── core/           # 任务调度、事件广播、错误定义
-│   │   ├── services/
-│   │   │   ├── overpass.py     # 抓 OSM 数据（换镜像 + 缓存）
-│   │   │   ├── osm_parse.py    # 解析要素（补高度、滤隧道、拼圈）
-│   │   │   ├── projection.py   # 坐标换算
-│   │   │   ├── terrain.py      # 抓地形、缩成高程网格
-│   │   │   ├── pipeline.py     # 五步主流程
-│   │   │   ├── mesh/           # 生成地形/楼房/道路的三角形网格
-│   │   │   ├── vector/         # 2D 绘制数据
-│   │   │   └── export/         # 17 种格式的导出代码
-│   │   └── ...
-│   └── tests/
-├── frontend/
-│   └── src/
-│       ├── api/            # 调后端接口
-│       ├── stores/         # 任务 / 导出 / 设置的数据
-│       ├── composables/    # WS/SSE 收实时进度（自动重连）
-│       ├── three/          # 3D 场景
-│       ├── components/     # 地图框选 / 任务卡片 / 查看器
-│       └── views/          # 主页 / 任务列表 / 查看页
-├── scripts/                # Windows 启动脚本
-└── docker-compose.yml
-```
+Code is open-sourced under [MIT](LICENSE): use it, change it, ship it commercially — just keep the LICENSE file with it.
 
-## 许可
-
-代码按 [MIT](LICENSE) 开源：随便用、随便改、商用也行，把 LICENSE 文件带着就好。
-
-提醒一句：这个工具生成的地图和模型来自 OpenStreetMap 的数据（ODbL 协议）。自己看、自己用没事；如果要公开发布或商业分发生成的成果，记得带上 OSM 的署名（一句 "© OpenStreetMap contributors" 即可）。
+One reminder: the maps and models this tool produces come from OpenStreetMap data (ODbL license). Personal use is fine; if you publish or commercially distribute the results, include the OSM attribution (a "© OpenStreetMap contributors" line is enough).

@@ -10,7 +10,8 @@ export type AppLocale = 'zh-CN' | 'en'
 
 const STORAGE_KEY = 'm2m.locale'
 
-/** 首选语言:手动选过的(localStorage)> 浏览器语言(非中文系就英文)> 中文。 */
+/** 首选语言:手动选过的(localStorage)> 浏览器语言(中文系就中文)> 英文。
+ * 默认英文(面向国际用户),中文浏览器仍会自动拿到中文。 */
 export function resolveInitialLocale(): AppLocale {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -19,18 +20,18 @@ export function resolveInitialLocale(): AppLocale {
     // node 环境没有 localStorage
   }
   try {
-    if (!navigator.language.toLowerCase().startsWith('zh')) return 'en'
+    if (navigator.language.toLowerCase().startsWith('zh')) return 'zh-CN'
   } catch {
     // node 环境没有 navigator
   }
-  return 'zh-CN'
+  return 'en'
 }
 
 export const i18n = createI18n({
   legacy: false, // 用 Composition API(useI18n())
   globalInjection: true, // 模板里才能直接写 $t()
   locale: resolveInitialLocale(),
-  fallbackLocale: 'zh-CN',
+  fallbackLocale: 'en',
   messages: { 'zh-CN': zhCN, en },
 })
 
