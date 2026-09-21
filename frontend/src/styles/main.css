@@ -11,7 +11,7 @@
   --ok: #16a34a;
   --warn: #d97706;
   /* 侧栏宽/内边距:窄屏档(文件末尾的媒体查询)会把它们改小 */
-  --side-w: 320px;
+  --side-w: 360px;
   --side-pad: 12px;
 }
 
@@ -422,6 +422,10 @@ button:disabled {
   margin-left: auto;
   color: var(--muted);
   font-size: 12px;
+  /* 英文徽章(COMPLETED)比中文宽,别让时间被挤到字符中间折行;
+     实在放不下(窄屏档)整条掉下去,也别断在数字中间 */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .task-card .row2 {
