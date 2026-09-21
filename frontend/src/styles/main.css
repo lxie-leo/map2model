@@ -175,9 +175,42 @@ body {
 
 /* 侧栏品牌行 */
 .side-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.5px;
+}
+
+/* 语言切换:brand 行右端的两个小钮,激活的那个亮色 */
+.lang-switch {
+  margin-left: auto; /* 推到行尾:宽屏下贴右边缘,窄屏下和收起钮作伴 */
+  display: inline-flex;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.lang-switch button {
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.lang-switch button + button {
+  margin-left: 2px;
+}
+
+.lang-switch button:hover,
+.lang-switch button.on {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* 侧栏的收起/展开按钮:宽屏下永远藏着(侧栏根本不缺地方),

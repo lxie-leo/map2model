@@ -140,7 +140,19 @@ async function create(b: BBox, options: TaskOptions) {
     </div>
     <aside class="side">
       <div class="side-brand">
-        map2model
+        <span>map2model</span>
+        <!-- 语言切换:两个小钮,点哪个界面就整体换哪种话 -->
+        <span class="lang-switch" :title="$t('app.lang')">
+          <button
+            type="button"
+            :class="{ on: settings.locale === 'zh-CN' }"
+            @click="settings.setLocale('zh-CN')"
+          >中</button><button
+            type="button"
+            :class="{ on: settings.locale === 'en' }"
+            @click="settings.setLocale('en')"
+          >EN</button>
+        </span>
         <button
           type="button"
           class="side-x"

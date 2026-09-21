@@ -5,6 +5,12 @@ import { fileURLToPath, URL } from 'node:url'
 // 开发时把 /api 和 /api/v1/ws 代理到本地后端(8000 端口)
 export default defineConfig({
   plugins: [vue()],
+  // vue-i18n 的两个编译开关:不用 legacy API、不开开发工具,
+  // 声明掉能消掉打包时的一串 feature-flag 警告
+  define: {
+    __VUE_I18N_LEGACY_API__: false,
+    __INTLIFY_PROD_DEVTOOLS__: false,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
