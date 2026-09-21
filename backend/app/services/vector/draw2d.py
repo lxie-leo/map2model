@@ -37,13 +37,14 @@ PALETTE_3D = {
     "GREEN": "#b7d6a8",
 }
 
-# 图例(和前端图层开关同一套说法);条目顺序和下面 _LEGEND_LAYERS 一一对应
+# 图例(和前端图层开关同一套说法);条目顺序和下面 _LEGEND_LAYERS 一一对应。
+# 文字固定英文:导出的 SVG/PDF/PNG 走英文就不需要中文字体链了
 LEGEND = [
-    ("绿地", PALETTE["green"]),
-    ("水体", PALETTE["water"]),
-    ("建筑", PALETTE["building"]),
-    ("道路", PALETTE["road_fill"]),
-    ("铁路", PALETTE["railway"]),
+    ("Green", PALETTE["green"]),
+    ("Water", PALETTE["water"]),
+    ("Buildings", PALETTE["building"]),
+    ("Roads", PALETTE["road_fill"]),
+    ("Railways", PALETTE["railway"]),
 ]
 
 _LEGEND_LAYERS = ("green", "water", "building", "road", "railway")

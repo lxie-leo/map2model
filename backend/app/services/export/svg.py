@@ -63,7 +63,7 @@ def render_svg(doc: DrawDoc, scale_px: float = 3.0) -> str:
     return "\n".join(body)
 
 
-@register("svg", "2D", "SVG(矢量图)")
+@register("svg", "2D", "SVG (vector)")
 def export_svg(ctx: ExportContext) -> str:
     from app.services.export.registry import read_preview
 

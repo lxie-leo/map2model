@@ -9,7 +9,7 @@ import shutil
 from app.services.export.registry import ExportContext, load_hub, register
 
 
-@register("glb", "3D", "GLB(glTF 2.0)")
+@register("glb", "3D", "GLB (glTF 2.0)")
 def export_glb(ctx: ExportContext) -> str:
     filename = f"{ctx.task_id}.glb"
     if ctx.layers is None:

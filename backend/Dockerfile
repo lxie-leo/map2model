@@ -10,13 +10,9 @@ WORKDIR /app
 # __init__.py 让 setuptools 过关,真代码在下一层再覆盖进来。
 # GIS 和 USD 这两组可选依赖也一并装上,容器里 17 种格式开箱即用
 # (不装的话 GPKG/USDZ 这些按钮就是灰的,和本机跑不一致)。
-# 中文字体:PNG/PDF 的图例要画汉字,slim 镜像一个字体都没有,
-# 不装的话图例会全变成小方块。
+# (以前还要装中文字体给 PNG/PDF 图例用,图例英文化后不需要了)
 COPY pyproject.toml ./
 RUN mkdir -p app && touch app/__init__.py \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends fonts-wqy-microhei \
-    && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir -e ".[gis,usd]" -i https://pypi.tuna.tsinghua.edu.cn/simple
 COPY app ./app
 

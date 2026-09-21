@@ -142,10 +142,12 @@ async def run_export(fmt: str, ctx: ExportContext) -> str:
     for mod in info.requires:
         if importlib.util.find_spec(mod) is None:
             raise ImportError(
-                f"格式 {info.label} 需要安装 Python 包 {mod}(pip install map2model-backend[{_extra_for(mod)}])"
+                f"The {info.label} format requires the Python package {mod} "
+                f"(pip install map2model-backend[{_extra_for(mod)}])"
             )
     if info.blender and find_blender(ctx.settings) is None:
-        raise ImportError("未检测到 Blender,无法导出该格式(安装 Blender 后自动启用)")
+        raise ImportError("Blender not detected, cannot export this format "
+                          "(it enables automatically once Blender is installed)")
 
     if asyncio.iscoroutinefunction(fn):
         return await fn(ctx)

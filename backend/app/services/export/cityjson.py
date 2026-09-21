@@ -80,7 +80,7 @@ def export_cityjson(ctx: ExportContext) -> str:
         }
 
     if not city_objects:
-        raise ValueError("没有建筑要素,无法生成 CityJSON")
+        raise ValueError("No building features, cannot generate CityJSON")
 
     ctx.on_progress(0.6, "quantizing vertices")
     arr = np.asarray(verts)

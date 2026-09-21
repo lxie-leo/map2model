@@ -29,7 +29,7 @@ _LEAF_MAX_TRIS = 20_000
 _MAX_DEPTH = 8
 
 
-@register("3dtiles", "GIS", "3D Tiles 1.1(Cesium)")
+@register("3dtiles", "GIS", "3D Tiles 1.1 (Cesium)")
 def export_tiles3d(ctx: ExportContext) -> str:
     ctx.on_progress(0.05, "loading hub.glb")
     scene = load_hub(ctx)
@@ -55,7 +55,7 @@ def export_tiles3d(ctx: ExportContext) -> str:
         tri_layer.extend([name] * len(f))
         tri_face.extend(range(len(f)))
     if not tri_layer:
-        raise ValueError("场景为空,无法生成 3D Tiles")
+        raise ValueError("Scene is empty, cannot generate 3D Tiles")
     centroids = np.concatenate(all_centroids)
     tri_layer_arr = np.asarray(tri_layer)
     tri_face_arr = np.asarray(tri_face)

@@ -96,7 +96,8 @@ async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
             on_progress=terrain_progress, cancel_event=ctx.cancel_event,
         )
         if grid is None:
-            ctx.warn("地形数据获取失败,已降级为平地(建筑/道路将落在 0 米基准面)")
+            ctx.warn("Failed to fetch terrain data; fell back to flat ground "
+                     "(buildings/roads will sit at the 0 m baseline)")
     if grid is None:
         grid = terrain_svc.TerrainGrid.flat(projector.width_m, projector.height_m)
     ctx.progress("FETCH_TERRAIN", 1.0, "terrain ready")

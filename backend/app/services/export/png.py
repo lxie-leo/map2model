@@ -10,13 +10,7 @@ def render_png(doc: DrawDoc, out_path, dpi: int = 200) -> None:
     import matplotlib
 
     matplotlib.use("Agg")  # 纯软件画图、不弹窗口,必须在 pyplot 之前切好
-    # 图例文字是中文,matplotlib 自带的 DejaVu 字体没做汉字,列一串常见
-    # 中文字体让它挨个找,找到哪个用哪个(顺带关掉负号变方块的问题)
-    matplotlib.rcParams["font.sans-serif"] = [
-        "Microsoft YaHei", "SimHei", "Noto Sans CJK SC", "WenQuanYi Micro Hei",
-        "PingFang SC", "DejaVu Sans",
-    ]
-    matplotlib.rcParams["axes.unicode_minus"] = False
+    # 图例文字是英文,自带的 DejaVu Sans 就够,不用再配中文字体链
     import matplotlib.pyplot as plt
     from matplotlib.colors import to_rgba
     from matplotlib.lines import Line2D
@@ -69,7 +63,7 @@ def render_png(doc: DrawDoc, out_path, dpi: int = 200) -> None:
     plt.close(fig)
 
 
-@register("png", "2D", "PNG(位图)")
+@register("png", "2D", "PNG (bitmap)")
 def export_png(ctx: ExportContext) -> str:
     from app.services.export.registry import read_preview
 

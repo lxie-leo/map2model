@@ -19,7 +19,7 @@ _TIMEOUT = 600  # 等 Blender 的上限,秒(大模型转 FBX 可能挺慢)
 def _blender_export(ctx: ExportContext, fmt: str) -> str:
     blender = find_blender(ctx.settings)
     if blender is None:
-        raise ImportError("未找到 Blender 可执行文件")
+        raise ImportError("Blender executable not found")
     script = Path(__file__).parent / "blender_script.py"
     out = ctx.export_dir / f"{ctx.task_id}.{fmt}"
     # 前端关了图层时,先过滤出一份临时 glb 再交给 Blender(用完就删)
@@ -44,7 +44,7 @@ def _blender_export(ctx: ExportContext, fmt: str) -> str:
                               timeout=_TIMEOUT)  # noqa: S603
         if proc.returncode != 0 or not out.exists():
             tail = (proc.stderr or proc.stdout or "")[-1500:]  # 只留报错末尾 1500 字,够排查了
-            raise RuntimeError(f"Blender 导出失败(exit {proc.returncode}):\n{tail}")
+            raise RuntimeError(f"Blender export failed (exit {proc.returncode}):\n{tail}")
     finally:
         if filtered is not None:
             filtered.unlink(missing_ok=True)
@@ -52,11 +52,11 @@ def _blender_export(ctx: ExportContext, fmt: str) -> str:
     return out.name
 
 
-@register("fbx", "3D", "FBX(需 Blender)", blender=True)
+@register("fbx", "3D", "FBX (needs Blender)", blender=True)
 def export_fbx(ctx: ExportContext) -> str:
     return _blender_export(ctx, "fbx")
 
 
-@register("dae", "3D", "DAE Collada(需 Blender)", blender=True)
+@register("dae", "3D", "DAE Collada (needs Blender)", blender=True)
 def export_dae(ctx: ExportContext) -> str:
     return _blender_export(ctx, "dae")

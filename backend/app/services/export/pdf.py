@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-from pathlib import Path
-
 from app.services.export.registry import ExportContext, register
 from app.services.vector.draw2d import PALETTE, DrawDoc, draw_doc_from_preview, legend_for
 
@@ -12,32 +9,8 @@ from app.services.vector.draw2d import PALETTE, DrawDoc, draw_doc_from_preview, 
 _PAGES = [(842, 595), (1191, 842), (1684, 1191)]  # A4, A3, A2
 _MARGIN = 28  # 四周留白,pt
 
-# reportlab 自带的 Helvetica 只认英文,图例是中文,得从系统里找一个
-# 汉字字体文件(前面的是 Windows,最后一个是 Docker 容器里常见的)
-_CJK_FONTS = [
-    ("Deng", r"C:\Windows\Fonts\Deng.ttf"),
-    ("SimHei", r"C:\Windows\Fonts\simhei.ttf"),
-    ("MSYaHei", r"C:\Windows\Fonts\msyh.ttc"),
-    ("SimSun", r"C:\Windows\Fonts\simsun.ttc"),
-    ("WQY", "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
-]
-
-
-@lru_cache(maxsize=1)
-def _cjk_font_name() -> str:
-    """挨个试上面的字体文件,能注册成功的就用它;一个都没有就退回
-    Helvetica(中文会画不出来,但 PDF 本身还能正常出)。"""
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-
-    for name, path in _CJK_FONTS:
-        try:
-            if Path(path).exists():
-                pdfmetrics.registerFont(TTFont(name, path))
-                return name
-        except Exception:  # noqa: BLE001 - 这个不行就换下一个
-            continue
-    return "Helvetica"
+# 图例文字是英文,自带 Helvetica 就够;以前为画汉字备过一串系统字体探测,
+# 已随图例英文化删掉——将来若要往 PDF 里画地名等数据文本,得重新引入 CJK 字体
 
 
 def render_pdf(doc: DrawDoc, out_path) -> None:
@@ -99,19 +72,18 @@ def render_pdf(doc: DrawDoc, out_path) -> None:
     c.setFillColor(HexColor("#ffffff"))
     c.setStrokeColor(HexColor("#999999"))
     c.rect(lx, ly, 110, 14 * len(legend) + 8, fill=1, stroke=1)
-    font_name = _cjk_font_name()
     for i, (label, color) in enumerate(legend):
         ty = ly + 14 * len(legend) - 6 - i * 14
         c.setFillColor(HexColor(color))
         c.rect(lx + 8, ty, 12, 8, fill=1, stroke=0)
         c.setFillColor(HexColor("#333333"))
-        c.setFont(font_name, 8)
+        c.setFont("Helvetica", 8)
         c.drawString(lx + 26, ty + 1, label)
     c.showPage()
     c.save()
 
 
-@register("pdf", "2D", "PDF(制图)")
+@register("pdf", "2D", "PDF (map sheet)")
 def export_pdf(ctx: ExportContext) -> str:
     from app.services.export.registry import read_preview
 

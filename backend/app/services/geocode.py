@@ -37,7 +37,7 @@ def _to_result(f: dict) -> dict | None:
     coords = geom.get("coordinates") or []
     if len(coords) != 2:
         return None
-    name = p.get("name") or p.get("street") or p.get("city") or "未命名地点"
+    name = p.get("name") or p.get("street") or p.get("city") or "Unnamed place"
     # extent 是可选的(点状地点没有):顺序 西,北,东,南,换成熟悉的 西,南,东,北
     ext = p.get("extent")
     bbox = [ext[0], ext[3], ext[2], ext[1]] if isinstance(ext, list) and len(ext) == 4 else None
@@ -79,7 +79,7 @@ async def search_place(q: str, settings: Settings) -> list[dict]:
             resp.raise_for_status()
             data = resp.json()
     except httpx.HTTPError as exc:
-        raise FetchError(f"地点搜索服务连不上: {exc}") from exc
+        raise FetchError(f"Place search service unreachable: {exc}") from exc
 
     results = [r for f in data.get("features", []) if (r := _to_result(f))]
 

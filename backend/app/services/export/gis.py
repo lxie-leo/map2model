@@ -92,13 +92,13 @@ def _load(ctx: ExportContext):
     return preview, projector
 
 
-@register("gpkg", "GIS", "GPKG(QGIS)", requires=("geopandas", "pyogrio"))
+@register("gpkg", "GIS", "GPKG (QGIS)", requires=("geopandas", "pyogrio"))
 def export_gpkg(ctx: ExportContext) -> str:
     preview, projector = _load(ctx)
     ctx.on_progress(0.4, "building layers")
     frames = _build_layer_frames(preview, projector)
     if not frames:
-        raise ValueError("没有可导出的矢量要素")
+        raise ValueError("No vector features to export")
     filename = f"{ctx.task_id}.gpkg"
     path = ctx.export_dir / filename
     for i, (name, gdf) in enumerate(frames):
@@ -108,13 +108,13 @@ def export_gpkg(ctx: ExportContext) -> str:
     return filename
 
 
-@register("shp", "GIS", "SHP(打包 zip)", requires=("geopandas", "pyogrio"))
+@register("shp", "GIS", "SHP (zipped)", requires=("geopandas", "pyogrio"))
 def export_shp(ctx: ExportContext) -> str:
     preview, projector = _load(ctx)
     ctx.on_progress(0.3, "building layers")
     frames = _build_layer_frames(preview, projector)
     if not frames:
-        raise ValueError("没有可导出的矢量要素")
+        raise ValueError("No vector features to export")
     tmp_dir = ctx.export_dir / "shp_tmp"
     tmp_dir.mkdir(exist_ok=True)
     for i, (name, gdf) in enumerate(frames):

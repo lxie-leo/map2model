@@ -15,7 +15,7 @@ import zipfile
 from app.services.export.registry import ExportContext, load_hub, register
 
 
-@register("usdz", "3D", "USDZ(AR 快速预览)", requires=("pxr",))
+@register("usdz", "3D", "USDZ (AR quick look)", requires=("pxr",))
 def export_usdz(ctx: ExportContext) -> str:
     import numpy as np
     from pxr import Usd, UsdGeom, Vt

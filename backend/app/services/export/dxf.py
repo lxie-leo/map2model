@@ -24,7 +24,7 @@ _DXF_LAYERS = {
 }
 
 
-@register("dxf", "2D", "DXF(AutoCAD)")
+@register("dxf", "2D", "DXF (AutoCAD)")
 def export_dxf(ctx: ExportContext) -> str:
     from app.services.export.registry import read_preview
 

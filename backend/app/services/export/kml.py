@@ -28,12 +28,13 @@ def export_kml(ctx: ExportContext, kmz: bool = False) -> str:
 
     preview = read_preview(ctx)
     kml = simplekml.Kml()
+    # 文件夹名固定英文,跟其它导出格式保持一致
     folders = {
-        "building": kml.newfolder(name="建筑"),
-        "road": kml.newfolder(name="道路"),
-        "railway": kml.newfolder(name="铁路"),
-        "water": kml.newfolder(name="水系"),
-        "green": kml.newfolder(name="绿地"),
+        "building": kml.newfolder(name="Buildings"),
+        "road": kml.newfolder(name="Roads"),
+        "railway": kml.newfolder(name="Railways"),
+        "water": kml.newfolder(name="Water"),
+        "green": kml.newfolder(name="Green"),
     }
 
     total = max(len(preview.get("features", [])), 1)
@@ -87,6 +88,6 @@ def export_kml(ctx: ExportContext, kmz: bool = False) -> str:
     return filename
 
 
-@register("kmz", "GIS", "KMZ(打包)")
+@register("kmz", "GIS", "KMZ (zipped)")
 def export_kmz(ctx: ExportContext) -> str:
     return export_kml(ctx, kmz=True)

@@ -56,7 +56,8 @@ def to_local_buildings(
         dropped = len(out) - max_buildings
         out = out[:max_buildings]
         if warn:
-            warn(f"建筑数量超上限,已按面积保留前 {max_buildings} 个,丢弃 {dropped} 个小建筑")
+            warn(f"Building count over limit: kept the largest {max_buildings} by area, "
+                 f"dropped {dropped} small buildings")
     return out
 
 
