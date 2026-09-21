@@ -29,6 +29,7 @@ const messages = {
     cancel: '取消',
     remove: '删除',
     cardTitle: '点击在地图上显示框选范围',
+    fallbackError: '任务失败',
   },
 
   // ---- 导出 ----
@@ -51,6 +52,7 @@ const messages = {
     downloadNotice: '正在下载,请进入下载页面查看进度',
     goDownloads: '进入下载页',
     exportButton: '导出',
+    fallbackError: '导出失败',
   },
 
   // 17 种格式的一句话说明(键 = 后端格式名)
@@ -145,6 +147,37 @@ const messages = {
     ws: '实时通道已连接',
     sse: '实时通道:备用模式',
     offline: '正在连接实时通道…',
+  },
+
+  // ---- 任务列表 ----
+  taskList: {
+    total: '任务 · {n}',
+    refresh: '刷新',
+    refreshing: '刷新中…',
+    emptyPrefix: '还没有任务,',
+    goCreate: '去地图上框一块',
+    deleteConfirm: '删除任务会连同生成的文件一起删掉,确定?',
+    cancelFailed: '取消失败:{msg}',
+    deleteFailed: '删除失败:{msg}',
+  },
+
+  // ---- 地点搜索 ----
+  search: {
+    placeholder: '搜索地点,如:陆家嘴',
+    go: '搜',
+    noResults: '没找到这个地方,换个说法试试',
+  },
+
+  // ---- 3D 画布 ----
+  scene: {
+    loading: '模型加载中…',
+    failedPrefix: '模型加载失败:',
+    retry: '重试',
+  },
+
+  // ---- 2D 预览 ----
+  map2d: {
+    failedPrefix: '2D 预览加载失败:',
   },
 }
 

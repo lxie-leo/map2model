@@ -140,7 +140,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="rootEl" class="map2d-panel">
     <BaseMap :basemap="false" @ready="onReady" />
-    <div v-if="error" class="overlay error">2D 预览加载失败:{{ error }}</div>
+    <div v-if="error" class="overlay error">{{ $t('map2d.failedPrefix') }}{{ error }}</div>
   </div>
 </template>
 

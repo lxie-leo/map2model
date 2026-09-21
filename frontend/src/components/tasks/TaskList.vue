@@ -2,6 +2,7 @@
 // 任务列表(住在主页侧栏里):进来拉一次数据,后续进度靠 WS/SSE 实时刷(store 已接管)。
 
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, formatApiError } from '@/api/client'
 import { useTasksStore } from '@/stores/tasks'
 import TaskCard from './TaskCard.vue'
@@ -9,6 +10,7 @@ import TaskCard from './TaskCard.vue'
 const props = defineProps<{ selectedId?: string | null }>()
 const emit = defineEmits<{ goCreate: []; select: [id: string, bbox: [number, number, number, number]] }>()
 
+const { t } = useI18n()
 const store = useTasksStore()
 const actionError = ref<string | null>(null)
 
@@ -20,22 +22,22 @@ async function cancel(id: string) {
   // 不等服务器回复,先把本地状态改成"已取消";取消的推送马上也会从 WS 过来。
   // 万一服务器没收下(比如点的那一瞬间任务恰好跑完了),把真实状态拉回来,
   // 不然卡片会一直挂在"已取消"上
-  const t = store.tasks.find((x) => x.id === id)
-  if (t) t.status = 'CANCELLED'
+  const task = store.tasks.find((x) => x.id === id)
+  if (task) task.status = 'CANCELLED'
   try {
     await api.cancelTask(id)
   } catch (e) {
-    actionError.value = `取消失败:${formatApiError(e)}`
+    actionError.value = t('taskList.cancelFailed', { msg: formatApiError(e) })
     void store.refreshOne(id)
   }
 }
 
 async function remove(id: string) {
-  if (!confirm('删除任务会连同生成的文件一起删掉,确定?')) return
+  if (!confirm(t('taskList.deleteConfirm'))) return
   try {
     await store.remove(id)
   } catch (e) {
-    actionError.value = `删除失败:${formatApiError(e)}`
+    actionError.value = t('taskList.deleteFailed', { msg: formatApiError(e) })
   }
 }
 </script>
@@ -43,14 +45,14 @@ async function remove(id: string) {
 <template>
   <div class="task-list">
     <div class="toolbar">
-      <span class="total">任务 · {{ store.tasks.length }}</span>
+      <span class="total">{{ $t('taskList.total', { n: store.tasks.length }) }}</span>
       <button class="btn" :disabled="store.loading" @click="store.refresh()">
-        {{ store.loading ? '刷新中…' : '刷新' }}
+        {{ store.loading ? $t('taskList.refreshing') : $t('taskList.refresh') }}
       </button>
     </div>
 
     <p v-if="store.loaded && store.tasks.length === 0" class="empty">
-      还没有任务,<a href="#" @click.prevent="emit('goCreate')">去地图上框一块</a>
+      {{ $t('taskList.emptyPrefix') }}<a href="#" @click.prevent="emit('goCreate')">{{ $t('taskList.goCreate') }}</a>
     </p>
 
     <p v-if="actionError" class="error">{{ actionError }}</p>

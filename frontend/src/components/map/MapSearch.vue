@@ -4,11 +4,13 @@
 // 列表项用 mousedown 选中:click 的话输入框先失焦、列表先被收起,就点不到了。
 
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, formatApiError } from '@/api/client'
 import type { PlaceResult } from '@/api/types'
 
 const emit = defineEmits<{ pick: [place: PlaceResult] }>()
 
+const { t } = useI18n()
 const q = ref('')
 const results = ref<PlaceResult[]>([])
 const loading = ref(false)
@@ -22,7 +24,7 @@ async function search() {
   results.value = []
   try {
     results.value = await api.geocode(word)
-    if (!results.value.length) error.value = '没找到这个地方,换个说法试试'
+    if (!results.value.length) error.value = t('search.noResults')
   } catch (e) {
     error.value = formatApiError(e)
   } finally {
@@ -47,10 +49,10 @@ function onBlur() {
       <input
         v-model="q"
         type="text"
-        placeholder="搜索地点,如:陆家嘴"
+        :placeholder="$t('search.placeholder')"
         @blur="onBlur"
       />
-      <button type="submit" :disabled="loading">{{ loading ? '…' : '搜' }}</button>
+      <button type="submit" :disabled="loading">{{ loading ? '…' : $t('search.go') }}</button>
     </form>
     <p v-if="error" class="msg">{{ error }}</p>
     <ul v-if="results.length" class="results">

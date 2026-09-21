@@ -3,6 +3,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/client'
 import type { Task, TaskEvent } from '@/api/types'
+import { i18n } from '@/locales'
 import { useExportsStore } from './exports'
 
 export const useTasksStore = defineStore('tasks', {
@@ -69,7 +70,7 @@ export const useTasksStore = defineStore('tasks', {
           break
         case 'task_error':
           t.status = 'FAILED'
-          t.error = ev.message ?? '任务失败'
+          t.error = ev.message ?? i18n.global.t('task.fallbackError')
           break
         case 'task_cancelled':
           t.status = 'CANCELLED'

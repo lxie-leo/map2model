@@ -69,10 +69,10 @@ onBeforeUnmount(() => {
 <template>
   <div class="scene-canvas">
     <canvas ref="canvas"></canvas>
-    <div v-if="loading" class="overlay">模型加载中…</div>
+    <div v-if="loading" class="overlay">{{ $t('scene.loading') }}</div>
     <div v-else-if="error" class="overlay error">
-      模型加载失败:{{ error }}
-      <button class="btn" @click="load">重试</button>
+      {{ $t('scene.failedPrefix') }}{{ error }}
+      <button class="btn" @click="load">{{ $t('scene.retry') }}</button>
     </div>
   </div>
 </template>

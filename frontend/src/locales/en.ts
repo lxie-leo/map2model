@@ -28,6 +28,7 @@ const messages = {
     cancel: 'Cancel',
     remove: 'Delete',
     cardTitle: 'Click to show the selected area on the map',
+    fallbackError: 'Task failed',
   },
 
   export_: {
@@ -49,6 +50,7 @@ const messages = {
     downloadNotice: 'Export started — check the Downloads tab for progress',
     goDownloads: 'Open downloads',
     exportButton: 'Export',
+    fallbackError: 'Export failed',
   },
 
   format: {
@@ -134,6 +136,33 @@ const messages = {
     ws: 'Live channel connected',
     sse: 'Live channel: fallback mode',
     offline: 'Connecting live channel…',
+  },
+
+  taskList: {
+    total: 'Tasks · {n}',
+    refresh: 'Refresh',
+    refreshing: 'Refreshing…',
+    emptyPrefix: 'No tasks yet — ',
+    goCreate: 'draw a box on the map',
+    deleteConfirm: 'Delete this task along with its generated files?',
+    cancelFailed: 'Cancel failed: {msg}',
+    deleteFailed: 'Delete failed: {msg}',
+  },
+
+  search: {
+    placeholder: 'Search a place, e.g. Lujiazui',
+    go: 'Go',
+    noResults: 'Nothing found — try another name',
+  },
+
+  scene: {
+    loading: 'Loading model…',
+    failedPrefix: 'Failed to load model: ',
+    retry: 'Retry',
+  },
+
+  map2d: {
+    failedPrefix: 'Failed to load 2D preview: ',
   },
 } satisfies MessageSchema
 

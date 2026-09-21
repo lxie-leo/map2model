@@ -3,6 +3,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/client'
 import type { ExportEvent, ExportJob } from '@/api/types'
+import { i18n } from '@/locales'
 
 export const useExportsStore = defineStore('exports', {
   state: () => ({
@@ -67,7 +68,7 @@ export const useExportsStore = defineStore('exports', {
         job.filename = ev.message ?? job.filename
       } else if (ev.type === 'export_error') {
         job.status = 'FAILED'
-        job.error = ev.message ?? '导出失败'
+        job.error = ev.message ?? i18n.global.t('export_.fallbackError')
       } else if (job.status === 'QUEUED') {
         job.status = 'RUNNING'
       }
