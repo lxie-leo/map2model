@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv-desktop/
 venv/
 .pytest_cache/
 .ruff_cache/
@@ -17,6 +18,9 @@ dist/
 backend/data/
 logs/
 *.log
+
+# 桌面版打包的工作目录(产物目录 dist/ 上面已覆盖)
+desktop/build/
 
 # 杂项
 .DS_Store

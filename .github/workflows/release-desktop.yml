@@ -1,0 +1,87 @@
+# 打 tag(v*)时打包 Windows 桌面版并发布到 GitHub Releases;
+# 也可以从 Actions 页手动触发(workflow_dispatch),产物以 artifact 形式下载先验货。
+# exe 没有代码签名,用户首次运行会碰到 SmartScreen 提示,README 里有说明。
+name: Release Desktop
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: 打包 Windows 桌面版
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: 装后端依赖(含打包工具)
+        working-directory: backend
+        run: pip install -e ".[desktop,gis,usd]"
+
+      - name: 前端构建
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: PyInstaller 打包
+        run: pyinstaller desktop/map2model.spec --noconfirm --distpath desktop/dist --workpath desktop/build
+
+      # 真起一次打包产物:服务、健康检查、17 种格式可用性断言
+      # (runner 上没装 Blender,fbx/dae 置灰是预期行为,正好验证降级逻辑)
+      # exe 是 windowed 的,pwsh 直接调不会等,得 Start-Process -Wait 拿退出码
+      - name: 产物自检
+        run: |
+          $p = Start-Process -FilePath "desktop\dist\map2model\map2model.exe" -ArgumentList "--smoke" -Wait -PassThru
+          exit $p.ExitCode
+
+      # 深度自检:走真网络建一个小任务,15 种非 Blender 格式全真导一遍并查文件头
+      # (pyproj 投影、pyogrio 的 GDAL、pxr 的 USD 写出,只有真跑才暴露冻结问题)
+      - name: 深度自检(真任务)
+        run: |
+          $p = Start-Process -FilePath "desktop\dist\map2model\map2model.exe" -ArgumentList "--smoke-task" -Wait -PassThru
+          exit $p.ExitCode
+
+      # exe 无控制台,自检输出全在日志文件里;失败了把它打出来才好排障
+      - name: 自检失败时打印日志
+        if: failure()
+        run: Get-Content "$env:LOCALAPPDATA\map2model\logs\desktop.log" -Tail 80
+
+      - name: 压缩产物
+        run: |
+          Compress-Archive -Path desktop\dist\map2model\* -DestinationPath map2model-desktop-windows-x64.zip
+
+      # 手动触发(没打 tag)时先出 artifact,人工验完再正式发版
+      - name: 上传 artifact(手动触发时)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: map2model-desktop-windows-x64
+          path: map2model-desktop-windows-x64.zip
+
+      - name: 发布到 Releases(打 tag 时)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: map2model-desktop-windows-x64.zip

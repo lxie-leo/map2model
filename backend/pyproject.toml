@@ -36,6 +36,8 @@ dependencies = [
 [project.optional-dependencies]
 gis = ["geopandas>=0.14", "pyogrio>=0.9"]
 usd = ["usd-core>=24.3"]
+# 桌面版打包专用:pywebview 开独立窗口,pyinstaller 把后端冻成 exe
+desktop = ["pywebview>=5.4", "pyinstaller>=6.10,<7"]
 dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
