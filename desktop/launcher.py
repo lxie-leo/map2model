@@ -80,6 +80,20 @@ def _frontend_dist() -> Path:
     return p
 
 
+def _app_icon() -> Path | None:
+    """窗口图标:打包后躺 _internal 里,源码运行在 desktop/ 下。
+
+    不给的话 pywebview 会从 exe 资源里抠,但那条路走的是句柄克隆,
+    在部分机器上渲染不出来;显式给文件最稳。找不到就返回 None,
+    交给 pywebview 自己兜底。
+    """
+    if getattr(sys, "frozen", False):
+        p = Path(getattr(sys, "_MEIPASS", ".")) / "icon.ico"
+    else:
+        p = _repo_root() / "desktop" / "icon.ico"
+    return p if p.is_file() else None
+
+
 def _setup_stderr() -> None:
     """把 stdout/stderr 接到日志文件。
 
@@ -120,6 +134,56 @@ def _msg_box(text: str, title: str = "map2model") -> None:
     import ctypes
 
     ctypes.windll.user32.MessageBoxW(0, text, title, 0)
+
+
+def _confirm_exit() -> bool:
+    """退出确认框,弹在主窗口正中央。
+
+    MessageBox 不会跟着属主窗口居中(实测 Win10 带属主也是屏幕居中),
+    所以弹出的同时用一个后台小线程把它搬到主窗口正中。
+    返回 False 取消关窗(closing 事件的约定),True 放行。
+    """
+    import ctypes
+    import time
+
+    u32 = ctypes.WinDLL("user32")
+    u32.FindWindowW.restype = ctypes.c_void_p
+
+    class RECT(ctypes.Structure):
+        _fields_ = [("l", ctypes.c_long), ("t", ctypes.c_long),
+                    ("r", ctypes.c_long), ("b", ctypes.c_long)]
+
+    def _center_dialog(owner) -> None:
+        dlg = 0
+        for _ in range(100):  # 最多等 5 秒
+            dlg = u32.FindWindowW("#32770", "map2model")
+            if dlg:
+                break
+            time.sleep(0.05)
+        if not dlg or not owner:
+            return
+        # 窗口可能被放大缩小挪动过,弹窗出现时现读矩形,居中永远跟着当下位置
+        rw, rd = RECT(), RECT()
+        if not u32.GetWindowRect(ctypes.c_void_p(owner), ctypes.byref(rw)):
+            return
+        if not u32.GetWindowRect(ctypes.c_void_p(dlg), ctypes.byref(rd)):
+            return
+        x = rw.l + (rw.r - rw.l - (rd.r - rd.l)) // 2
+        y = rw.t + (rw.b - rw.t - (rd.b - rd.t)) // 2
+        # SWP_NOSIZE | SWP_NOZORDER:只挪位置,不动大小和层次
+        u32.SetWindowPos(ctypes.c_void_p(dlg), None, x, y, 0, 0, 0x1 | 0x4)
+
+    # 主窗口句柄必须在弹窗创建前抓:弹窗标题也叫 map2model,
+    # 事后再 FindWindow 找到的"主窗口"其实是弹窗自己,往自己身上居中等于没搬
+    win = u32.FindWindowW(None, "map2model")
+    threading.Thread(target=_center_dialog, args=(win,), daemon=True).start()
+    # 属主给主窗口:弹窗期间主窗口被禁用,没法拖着窗口让中心点中途漂移
+    return ctypes.windll.user32.MessageBoxW(
+        ctypes.c_void_p(win) if win else 0,
+        "确定要退出 map2model 吗?",
+        "map2model",
+        0x1,  # MB_OKCANCEL
+    ) == 1  # IDOK
 
 
 def _acquire_single_instance() -> bool:
@@ -373,11 +437,16 @@ def main() -> int:
             # 默认是关的:WebView2 的下载请求会被 pywebview 静默取消,
             # 表现就是点「下载」毫无反应。打开后走「另存为」对话框(默认在下载目录)
             webview.settings["ALLOW_DOWNLOADS"] = True
-            webview.create_window(
+            window = webview.create_window(
                 "map2model", url, width=1440, height=900, min_size=(1024, 640)
             )
-            # 显式指定 WebView2,别静默退到老掉牙的 MSHTML(那玩意跑不动地图)
-            webview.start(gui="edgechromium")
+            # 点 X 先弹确认,免得误触把正在跑的任务带走;自己接管而不用 pywebview
+            # 的 confirm_close,是因为它弹的框不带属主窗口,不会居中到主窗口上
+            window.events.closing += _confirm_exit
+            # 显式指定 WebView2,别静默退到老掉牙的 MSHTML(那玩意跑不动地图);
+            # icon 显式给文件,窗口/任务栏图标不靠 pywebview 从 exe 抠资源的兜底路
+            icon = _app_icon()
+            webview.start(gui="edgechromium", icon=str(icon) if icon else None)
         except Exception:  # noqa: BLE001 - WebView2 缺失等一切窗口问题都退到浏览器
             traceback.print_exc()
             webbrowser.open(url)

@@ -10,7 +10,10 @@ from PyInstaller.utils.hooks import (
     collect_submodules,
 )
 
-HERE = os.path.abspath(".")
+# SPECPATH 是 PyInstaller 执行 spec 时注入的"spec 所在目录",指路永远可靠;
+# 别用 os.path.abspath(".")(那是启动时的 CWD,从仓库根打包会指到根目录,
+# icon.ico 就这么静默丢了 → 产物嵌的是 PyInstaller 默认图标,长得像没图标)
+ICON = os.path.join(SPECPATH, "icon.ico")
 
 # ---- 动态导入的模块,静态分析看不见,必须点名 ----
 hidden = (
@@ -45,6 +48,8 @@ datas = [
     # Blender 导出脚本:blender.py 用 Path(__file__) 找它,而 __file__ 指向
     # 的是磁盘路径;模块本身进了 PYZ 压缩包,没有对应的真实文件,必须按原位放一份
     ("../backend/app/services/export/blender_script.py", "app/services/export"),
+    # 窗口图标:launcher 的 _app_icon() 会来 _internal/icon.ico 找它
+    ("icon.ico", "."),
 ]
 datas += collect_data_files("trimesh")
 datas += collect_data_files("webview")
@@ -105,7 +110,8 @@ exe = EXE(
     strip=False,
     upx=False,  # UPX 压缩是杀软误报重灾区,不开
     console=False,  # 无控制台窗口;日志全走 %LOCALAPPDATA%/map2model/logs
-    icon="icon.ico" if os.path.exists(os.path.join(HERE, "icon.ico")) else None,
+    # 必须传绝对路径:裸 "icon.ico" 按 CWD 解析,从仓库根跑 pyinstaller 会找不到
+    icon=ICON if os.path.exists(ICON) else None,
 )
 
 coll = COLLECT(
