@@ -193,6 +193,10 @@ cd frontend; corepack pnpm build
 
 On Python 3.14: `mapbox-earcut` has no 3.14 package yet, so the program automatically switches to its own triangulation code — same results, just slower. The Docker image is pinned to 3.12 and doesn't have this issue.
 
+## Author
+
+Leo Xie — GIS / 3D / full-stack. Open to custom development and consulting: [742875110@qq.com](mailto:742875110@qq.com) · [GitHub](https://github.com/lxie-leo)
+
 ## License
 
 Code is open-sourced under [MIT](LICENSE): use it, change it, ship it commercially — just keep the LICENSE file with it.

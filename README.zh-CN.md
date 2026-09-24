@@ -225,6 +225,10 @@ map2model/
 └── docker-compose.yml
 ```
 
+## 作者
+
+Leo Xie。GIS / 三维 / 全栈方向,接受定制开发与技术咨询:[742875110@qq.com](mailto:742875110@qq.com) · [GitHub](https://github.com/lxie-leo)
+
 ## 许可
 
 代码按 [MIT](LICENSE) 开源：随便用、随便改、商用也行，把 LICENSE 文件带着就好。
