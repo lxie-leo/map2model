@@ -3,7 +3,7 @@
 // 上面是框选面板,下面紧跟任务列表。生成后不跳走:按钮变回"框选",
 // 新任务卡片出现在列表里实时跑进度,想看 3D 再点"查看"。
 
-import { computed, ref, shallowRef } from 'vue'
+import { computed, onActivated, ref, shallowRef } from 'vue'
 import type { Map as MlMap } from 'maplibre-gl'
 import BaseMap from '@/components/map/BaseMap.vue'
 import SelectRect from '@/components/map/SelectRect.vue'
@@ -15,6 +15,9 @@ import type { BBox, PlaceResult, TaskOptions } from '@/api/types'
 import { useTasksStore } from '@/stores/tasks'
 import { useSettingsStore } from '@/stores/settings'
 import { ensureSubscribed, liveStatus } from '@/composables/useTaskEvents'
+
+// KeepAlive 靠这个名字认出主页(App.vue 里 include 的是它)
+defineOptions({ name: 'HomeView' })
 
 const tasks = useTasksStore()
 const settings = useSettingsStore()
@@ -35,6 +38,12 @@ const displayBox = computed(() => bbox.value ?? highlight.value)
 function onReady(m: MlMap) {
   map.value = m
 }
+
+// 从任务详情返回(KeepAlive 重新激活)时地图 DOM 是被摘下再挂回的,
+// maplibre 一般能自己恢复,补一次 resize 兜底,防止画布尺寸停在旧值
+onActivated(() => {
+  map.value?.resize()
+})
 
 function startDraw() {
   bbox.value = null // 重选就把旧框抹掉

@@ -15,6 +15,12 @@ onMounted(() => {
 
 <template>
   <main class="app-main">
-    <router-view />
+    <!-- 主页用 KeepAlive 保活:进任务详情再返回时地图实例不销毁,
+         瓦片不重载、视角原样;详情页不缓存(每次进不同任务都要重新拉数据) -->
+    <router-view v-slot="{ Component }">
+      <KeepAlive include="HomeView">
+        <component :is="Component" />
+      </KeepAlive>
+    </router-view>
   </main>
 </template>

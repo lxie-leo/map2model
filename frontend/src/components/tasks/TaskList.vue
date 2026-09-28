@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // 任务列表(住在主页侧栏里):进来拉一次数据,后续进度靠 WS/SSE 实时刷(store 已接管)。
 
-import { onMounted, ref } from 'vue'
+import { onActivated, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, formatApiError } from '@/api/client'
 import { useTasksStore } from '@/stores/tasks'
@@ -15,6 +15,13 @@ const store = useTasksStore()
 const actionError = ref<string | null>(null)
 
 onMounted(() => {
+  if (!store.loaded || store.activeIds.size > 0) store.refresh()
+})
+
+// 主页被 KeepAlive 保活后,从任务详情返回不会再走 onMounted;
+// 有活跃任务时回来对账一次(只拉列表数据,不动地图),
+// 兜住"看详情那会儿推送通道断过"漏掉的状态
+onActivated(() => {
   if (!store.loaded || store.activeIds.size > 0) store.refresh()
 })
 
