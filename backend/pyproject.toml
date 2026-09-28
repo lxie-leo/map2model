@@ -2,7 +2,7 @@
 name = "map2model-backend"
 version = "0.1.0"
 description = "map2model - OSM bbox to 2D map + 3D white-model scene, FastAPI backend"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",

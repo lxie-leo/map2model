@@ -10,7 +10,7 @@
 ![three.js](https://img.shields.io/badge/three.js-000000?logo=threedotjs&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 ![Node](https://img.shields.io/badge/Node-20%2B-339933?logo=nodedotjs&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![License](https://img.shields.io/badge/License-AGPL_v3-blue)
 [![CI](https://github.com/lxie-leo/map2model/actions/workflows/ci.yml/badge.svg)](https://github.com/lxie-leo/map2model/actions/workflows/ci.yml)
 
 </div>
@@ -236,8 +236,10 @@ map2model/
 
 Leo Xie。GIS / 三维 / 全栈方向,接受定制开发与技术咨询:[742875110@qq.com](mailto:742875110@qq.com) · [GitHub](https://github.com/lxie-leo)
 
-## 许可
+## 许可（双许可）
 
-代码按 [MIT](LICENSE) 开源：随便用、随便改、商用也行，把 LICENSE 文件带着就好。
+代码以 **[GNU AGPL-3.0](LICENSE)**（或更新版本）发布：随便用、随便改、部署商用都可以，只有一个条件——如果你改了代码并提供给别人用，**哪怕只是部署成在线服务**，你的修改也必须按同样的协议开源。
+
+**商业许可**：想把 map2model 嵌入闭源产品、或者改了不想开源，联系 [742875110@qq.com](mailto:742875110@qq.com)。
 
 提醒一句：这个工具生成的地图和模型来自两家的开放数据——OpenStreetMap（ODbL 协议）和 Overture Maps Foundation 的建筑足迹（CDLA-Permissive 2.0 协议，主要用在中国的楼房补全）。自己看、自己用没事；如果要公开发布或商业分发生成的成果，记得带上署名："© OpenStreetMap contributors" 和 "Buildings © Overture Maps Foundation" 各一句即可。

@@ -10,7 +10,7 @@
 ![three.js](https://img.shields.io/badge/three.js-000000?logo=threedotjs&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)
 ![Node](https://img.shields.io/badge/Node-20%2B-339933?logo=nodedotjs&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![License](https://img.shields.io/badge/License-AGPL_v3-blue)
 [![CI](https://github.com/lxie-leo/map2model/actions/workflows/ci.yml/badge.svg)](https://github.com/lxie-leo/map2model/actions/workflows/ci.yml)
 
 </div>
@@ -205,8 +205,10 @@ On Python 3.14: `mapbox-earcut` has no 3.14 package yet, so the program automati
 
 Leo Xie — GIS / 3D / full-stack. Open to custom development and consulting: [742875110@qq.com](mailto:742875110@qq.com) · [GitHub](https://github.com/lxie-leo)
 
-## License
+## License (dual licensing)
 
-Code is open-sourced under [MIT](LICENSE): use it, change it, ship it commercially — just keep the LICENSE file with it.
+The code is licensed under the **[GNU AGPL-3.0](LICENSE)** (or later). You are free to use, study, modify, deploy and run it — including commercially — with one condition: if you modify it and make the modified version available to others, **even only as a network service**, you must release your modifications under the same license.
+
+**Commercial license**: if you want to embed map2model in a closed-source product, or run it without open-sourcing your modifications, contact [742875110@qq.com](mailto:742875110@qq.com).
 
 One reminder: the maps and models this tool produces come from two open datasets — OpenStreetMap (ODbL license) and building footprints from the Overture Maps Foundation (CDLA-Permissive 2.0, used mainly for the China building infill). Personal use is fine; if you publish or commercially distribute the results, include the attributions: one "© OpenStreetMap contributors" line and one "Buildings © Overture Maps Foundation" line.
