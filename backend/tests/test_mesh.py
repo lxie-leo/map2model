@@ -36,6 +36,42 @@ def test_extrude(sample_payload, fake_terrain):
     assert mesh.vertices[:, 2].max() > mesh.vertices[:, 2].min() + 5.0
 
 
+def test_buildings_kept_or_dropped_whole(sample_payload):
+    """贴框的楼按整栋取舍:中心在框(+50 米)外的扔,框内的完整保留。
+
+    不裁半栋(切出的平边是假几何),也不能整栋漂在框外老远
+    (Overture 密集区贴边一排楼能伸出去上百米,3D 里悬在地形外)。
+    """
+    from math import cos, radians
+
+    from app.services.osm_parse import BuildingFeature
+
+    p = Projector(BBOX)
+    east = BBOX[2]                       # 框东界
+    clat = (BBOX[1] + BBOX[3]) / 2
+    dlon_1m = 1.0 / (111320.0 * cos(radians(clat)))  # 一米合多少经度
+
+    def mk(lon):
+        # 以给定经度为中心、边长约 40 米的方楼
+        w = 20.0 * dlon_1m
+        return BuildingFeature(outer=[
+            (lon - w, clat - w / 2), (lon + w, clat - w / 2),
+            (lon + w, clat + w / 2), (lon - w, clat + w / 2), (lon - w, clat - w / 2),
+        ])
+
+    feats = [
+        mk((BBOX[0] + east) / 2),        # 框正中,必须留
+        mk(east - 25.0 * dlon_1m),       # 中心在框内,楼体跨过东界 5 米,整栋留
+        mk(east + 200.0 * dlon_1m),      # 中心在框外 200 米(超出 50 米余量),扔
+    ]
+    kept = to_local_buildings(feats, p, max_buildings=1000)
+    assert len(kept) == 2
+    # 跨边那栋不能被裁:顶点还是完整的 5 个(含闭合点),面积也没缩水
+    edge = max(kept, key=lambda b: abs(b.poly.bounds[2]))
+    assert len(edge.poly.exterior.coords) == 5
+    assert edge.poly.area > 19.0 * 19.0  # 原 400 m²,裁过就到不了这么大面积
+
+
 def test_ribbon(sample_payload, fake_terrain):
     d = _local_features(sample_payload)
     road = d["roads"][0]

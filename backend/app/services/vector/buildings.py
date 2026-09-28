@@ -32,6 +32,11 @@ def to_local_buildings(
     max_buildings: int,
     warn=None,
 ) -> list[BuildingLocal]:
+    # 楼以整栋为单位取舍:中心落在框(+50 米余量,和水系/绿地同口径)外的
+    # 整栋扔。不裁半栋——切出来的平直边缘是假几何,制图上没法看;但也不放
+    # 任楼伸出框外老远(Overture 密集区贴边一排楼能伸出去上百米,3D 里全
+    # 悬在地形网格外面)
+    keep_box = projector.local_box(pad_m=50.0)
     out: list[BuildingLocal] = []
     for bf in buildings:
         outer = projector.to_local_many(bf.outer)
@@ -47,6 +52,8 @@ def to_local_buildings(
             poly = max(poly.geoms, key=lambda p: p.area)  # 多块就取最大那块
         poly = orient(poly, sign=1.0)  # 外环转逆时针
         if poly.area < 1.0:  # 小于 1 平方米的碎块直接扔
+            continue
+        if not keep_box.covers(poly.representative_point()):
             continue
         out.append(BuildingLocal(poly=poly, height=bf.height or 6.0, name=bf.name))
 

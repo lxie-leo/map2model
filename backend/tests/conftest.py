@@ -60,21 +60,27 @@ async def client(tmp_path, monkeypatch, sample_payload, fake_terrain):
     # 注意:管线里 Overture 是同步函数丢线程池跑的,这里 fake 也得是普通函数
     def fake_fetch_overture(bbox, *, settings, on_progress=None, cancel_event=None):
         # 两栋和 OSM fixture 不重合的楼:BBOX 在中国境内,auto 模式会真去拉,
-        # 集成测试一律用这份假数据。一栋带层数,一栋只有类别(吃先验高度)
-        feats = [
-            {
-                "outer": [[121.4905, 31.2345], [121.4910, 31.2345], [121.4910, 31.2350],
-                          [121.4905, 31.2350], [121.4905, 31.2345]],
-                "inners": [], "height": None, "levels": 3.0,
-                "name": "Overture 测试楼", "cls": "residential",
-            },
-            {
-                "outer": [[121.4930, 31.2355], [121.4935, 31.2355], [121.4935, 31.2360],
-                          [121.4930, 31.2360], [121.4930, 31.2355]],
-                "inners": [], "height": None, "levels": None,
-                "name": None, "cls": "commercial",
-            },
+        # 集成测试一律用这份假数据。一栋带层数,一栋只有类别(吃先验高度)。
+        # 坐标故意造成"GCJ 加偏像"(真实位置过一遍 wgs2gcj):楼的真实位置
+        # 和像位置都挑在框内,这样 auto(不纠,楼停在像位置)和 on(纠偏平移
+        # 回真实位置)两种模式下楼数都不变——框约 660x500m,上海偏移约 410m
+        from app.services import gcj
+
+        specs = [
+            {"levels": 3.0, "name": "Overture 测试楼", "cls": "residential"},
+            {"levels": None, "name": None, "cls": "commercial"},
         ]
+        feats = []
+        for (clon, clat), kw in zip(
+            [(121.4910, 31.2365), (121.4912, 31.2372)], specs, strict=True
+        ):
+            glon, glat = gcj.wgs2gcj(clon, clat)
+            w = 0.0002  # 约四十五米见方
+            feats.append({
+                "outer": [[glon - w, glat - w], [glon + w, glat - w], [glon + w, glat + w],
+                          [glon - w, glat + w], [glon - w, glat - w]],
+                "inners": [], "height": None, **kw,
+            })
         p = tmp_path / "fake_overture.json"
         p.write_text(json.dumps({
             "release": "test", "bbox": list(bbox), "count": len(feats), "features": feats,
