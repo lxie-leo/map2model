@@ -27,6 +27,9 @@ hidden = (
     # pyogrio 的 C 扩展(_geometry/_io/_ogr...)互相按模块名引用,
     # 依赖分析只盯见了 _io 一个,漏了 _geometry 就报"GDAL DLL not on PATH"(误导)
     + [m for m in collect_submodules("pyogrio") if not m.startswith("pyogrio.tests")]
+    # pyarrow 的 C 扩展也是按模块名懒加载(parquet/fs/compute 分得很细),漏了
+    # 表现为运行到 Overture 拉取才 ImportError
+    + collect_submodules("pyarrow")
     + [
         # 后端本体:launcher 只在函数里动态 import,pathex 指到 backend/,
         # 这里必须点名根包(collect_submodules 走 editable 安装找不到它,会空手而归)
@@ -59,6 +62,8 @@ datas += collect_data_files("pyogrio")
 binaries = []
 # pyogrio 的 GDAL 全家桶 DLL(hooks-contrib 有钩子,这里再兜一层底,重复了会自动去重)
 binaries += collect_dynamic_libs("pyogrio")
+# pyarrow 自带的 arrow*.dll(它没有系统依赖,全在 wheel 里)
+binaries += collect_dynamic_libs("pyarrow")
 
 # usd-core(pxr)没有现成钩子,插件注册靠 plugInfo.json,数据/子模块/DLL 全收
 _pxr_datas, _pxr_bins, _pxr_hidden = collect_all("pxr")

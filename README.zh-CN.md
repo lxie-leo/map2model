@@ -36,22 +36,24 @@
 ## 生成过程
 
 ```
- 框选范围 ──► 抓 OSM 数据 ──► 抓地形高程 ──► 解析换算 ──► 建模型 ──► 出成果
-    │                                                    │
-    │                                       ┌────────────┼────────────┐
-    │                                       ▼            ▼            ▼
-    └── 进度实时推到网页                hub.glb     preview.geojson   meta.json
-                                              │            │
-                                        3D 各格式      2D/GIS 各格式
+ 框选范围 ──► 抓 OSM 数据 ──► 抓 Overture 建筑 ──► 抓地形高程 ──► 解析换算 ──► 建模型 ──► 出成果
+    │              （中国大陆自动多抓一份建筑数据，和 OSM 合并去重）          │
+    │                                                                    │
+    │                                                       ┌────────────┼────────────┐
+    │                                                       ▼            ▼            ▼
+    └── 进度实时推到网页                                  hub.glb     preview.geojson   meta.json
+                                                                  │            │
+                                                            3D 各格式      2D/GIS 各格式
 ```
 
-一共五步，每一步进行到哪了网页上都能看到，中途随时可以取消。
+一共六步，每一步进行到哪了网页上都能看到，中途随时可以取消。
 
 ## 有哪些功能
 
 - 在地图上直接拖框选地，面积实时显示，框太大（超过 25 km²）会拦下来不让选
+- **中国大陆不缺楼**：自动从 Overture Maps 拉一份机器学习提取的建筑足迹（免费开放数据、不用 key）和 OSM 合并——OSM 在国内更新慢、新城区大量缺楼，Overture 补上；坐标带的 GCJ-02「火星偏移」也会自动校正，右上角能切卫星底图肉眼核对楼有没有对齐
 - 六类要素统一配色：SVG / PDF 是矢量的，放大多少倍都不糊；PNG / DXF / GeoJSON 各取所需
-- 楼房按 `height` 拉伸，没填高度的按楼层数估算；道路铁路按等级给宽度；地形照着 AWS 高程数据做出起伏
+- 楼房按 `height` 拉伸，没填高度的按楼层数估算，再不行按建筑类别给经验值；道路铁路按等级给宽度；地形照着 AWS 高程数据做出起伏
 - 3D 格式六种（GLB / OBJ / STL / USDZ / FBX / DAE），2D 四种（SVG / PDF / PNG / DXF），GIS 七种（GeoJSON / GPKG / SHP / KML / KMZ / CityJSON / 3D Tiles）
 - 「上」的方向提前替你转好了：GLB / USDZ 的上是 Y（Blender、three.js 的习惯），OBJ / STL / CityJSON 的上是 Z（CAD 的习惯），3D Tiles 自带经纬度定位，扔进 Cesium 就落在原地
 - 网络不好不至于白等：抓数据换着镜像挨个试；地形实在抓不到就改用平地，提醒你一声，任务不中断
@@ -155,6 +157,8 @@ docker compose up -d --build
 | --- | --- | --- |
 | `M2M_DATA_DIR` | `data` | 存数据库和生成文件的地方 |
 | `M2M_OVERPASS_ENDPOINTS` | 内置一排镜像 | 逗号隔开，从前往后挨个试 |
+| `M2M_OVERTURE_RELEASE` | `2026-09-23.1` | Overture 建筑数据版本；换了会重建行组索引 |
+| `M2M_OVERTURE_TIMEOUT` | `60` | 拉 Overture 单个文件的超时（秒） |
 | `M2M_MAX_BBOX_AREA_KM2` | `25` | 一次最多框多大 |
 | `M2M_MAX_BUILDINGS` | `20000` | 一次最多处理多少栋楼 |
 | `M2M_TASK_CONCURRENCY` | `2` | 同时跑几个任务 |
@@ -170,6 +174,9 @@ docker compose up -d --build
 **Q：生成一次要多久？**
 时间主要花在从 Overpass 拉数据：0.3 km² 的城区大概一分钟，地盘越大越慢。同一块地第二次生成直接用上次存的，几乎秒出。
 
+**Q：在中国第一次生成等了十几分钟，卡在「拉取 Overture 数据」？**
+正常现象。Overture 的建筑数据是全球混排的，第一次用要把它扫一遍建个本地索引（一次性成本，存在缓存里），之后每次都是秒级。实在等不了可以在生成面板把数据源切成「仅 OpenStreetMap」。
+
 **Q：怎么我的地形是平的？**
 有的网络访问不了 AWS 的地形瓦片，这时程序会自动改用平地，并在任务的警告里写明原因。挂个代理或换个网络就有了。
 
@@ -182,7 +189,7 @@ docker compose up -d --build
 ## 开发
 
 ```powershell
-# 后端测试（53 个用例）
+# 后端测试（82 个用例）
 cd backend; .venv\Scripts\python.exe -m pytest -q
 
 # 前端类型检查 + 单元测试
@@ -233,4 +240,4 @@ Leo Xie。GIS / 三维 / 全栈方向,接受定制开发与技术咨询:[7428751
 
 代码按 [MIT](LICENSE) 开源：随便用、随便改、商用也行，把 LICENSE 文件带着就好。
 
-提醒一句：这个工具生成的地图和模型来自 OpenStreetMap 的数据（ODbL 协议）。自己看、自己用没事；如果要公开发布或商业分发生成的成果，记得带上 OSM 的署名（一句 "© OpenStreetMap contributors" 即可）。
+提醒一句：这个工具生成的地图和模型来自两家的开放数据——OpenStreetMap（ODbL 协议）和 Overture Maps Foundation 的建筑足迹（CDLA-Permissive 2.0 协议，主要用在中国的楼房补全）。自己看、自己用没事；如果要公开发布或商业分发生成的成果，记得带上署名："© OpenStreetMap contributors" 和 "Buildings © Overture Maps Foundation" 各一句即可。

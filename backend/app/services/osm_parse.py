@@ -48,6 +48,7 @@ class BuildingFeature:
     height: float | None = None      # height 标签(米)
     levels: float | None = None      # building:levels 标签(层数)
     name: str | None = None
+    cls: str | None = None           # 建筑类别(OSM building 标签 / Overture class),估高度用
 
     @property
     def ring(self) -> list[tuple[float, float]]:
@@ -178,12 +179,14 @@ def _parse_way(el: dict, tags: dict, coords: list, feats: Features) -> None:
     name = tags.get("name")
 
     if "building" in tags:
+        btag = tags["building"]
         feats.buildings.append(
             BuildingFeature(
                 outer=coords,
                 height=_parse_number(tags.get("height") or tags.get("building:height")),
                 levels=_parse_number(tags.get("building:levels")),
                 name=name,
+                cls=btag if btag not in ("yes", "no") else None,
             )
         )
         return
@@ -257,6 +260,8 @@ def _poly_kind(tags: dict) -> str | None:
 def _parse_relation(el: dict, tags: dict, feats: Features) -> None:
     if "building" in tags:
         outers, inners = _members_to_rings(el)
+        btag = tags["building"]
+        cls = btag if btag not in ("yes", "no") else None
         # 一栋楼画成好几块的(建筑群 relation),每块单独算一栋,别只留第一块
         for outer, my_inners in zip(outers, _assign_inners(outers, inners)):
             feats.buildings.append(
@@ -265,6 +270,7 @@ def _parse_relation(el: dict, tags: dict, feats: Features) -> None:
                     height=_parse_number(tags.get("height") or tags.get("building:height")),
                     levels=_parse_number(tags.get("building:levels")),
                     name=tags.get("name"),
+                    cls=cls,
                 )
             )
         return
@@ -294,11 +300,29 @@ def _resolve_road_width(tags: dict, hw: str) -> float | None:
     return ROAD_WIDTH.get(hw)
 
 
-def resolve_building_heights(buildings: list[BuildingFeature]) -> None:
-    """坑:OSM 里建筑的高度经常没人填,这里给它们补上。
+# 按建筑类别估高度的先验表(米):一片区域连中位数都凑不出来时,
+# 按类别给个说得过去的值。Overture 的 ML 足迹没有层数没有高度,这张表是它
+# 在中国新城新区的主要高度来源;数值取常见层高 × 常见层数的粗估值。
+CLASS_HEIGHT_PRIOR: dict[str, float] = {
+    "residential": 12.0, "apartments": 18.0, "house": 6.0, "detached": 6.0,
+    "semidetached_house": 6.0, "terrace": 9.0, "dormitory": 15.0,
+    "commercial": 9.0, "retail": 9.0, "supermarket": 8.0, "hotel": 20.0,
+    "office": 20.0, "civic": 20.0, "public": 20.0, "government": 20.0,
+    "industrial": 10.0, "warehouse": 8.0, "factory": 10.0, "service": 4.0,
+    "garage": 3.0, "garages": 3.0, "carport": 3.0, "shed": 3.0, "hut": 3.0,
+    "education": 12.0, "school": 12.0, "kindergarten": 10.0, "college": 15.0,
+    "university": 15.0, "hospital": 15.0, "healthcare": 15.0,
+    "church": 12.0, "cathedral": 20.0, "temple": 9.0, "mosque": 12.0,
+    "parking": 3.0, "train_station": 10.0, "transportation": 10.0,
+    "mixed_use": 15.0, "commercial;residential": 15.0,
+}
 
-    顺序:height 标签优先 → 没有就按楼层数 ×3.2 米估 → 再不行用已知高度的中位数
-    → 全都没有就按 6 米算。
+
+def resolve_building_heights(buildings: list[BuildingFeature]) -> None:
+    """坑:OSM/Overture 里建筑的高度经常没人填,这里给它们补上。
+
+    顺序:height 优先 → 没有就按楼层数 ×3.2 米估 → 再不行用已知高度的中位数
+    → 还不行按建筑类别查先验表 → 全都没有就按 6 米算。
     """
     known = [
         b.height for b in buildings if b.height and b.height > 0
@@ -313,5 +337,7 @@ def resolve_building_heights(buildings: list[BuildingFeature]) -> None:
             b.height = round(b.levels * 3.2, 1)
         elif median:
             b.height = round(median, 1)
+        elif b.cls and b.cls in CLASS_HEIGHT_PRIOR:
+            b.height = CLASS_HEIGHT_PRIOR[b.cls]
         else:
             b.height = 6.0

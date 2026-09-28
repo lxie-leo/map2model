@@ -114,7 +114,7 @@ async function create(b: BBox, options: TaskOptions) {
   <!-- 窄窗口下侧栏是浮层,side-closed 表示收起(宽屏下这个 class 没有任何效果) -->
   <div class="home-view" :class="{ 'side-closed': !settings.sideOpen }">
     <div class="map-wrap">
-      <BaseMap @ready="onReady" />
+      <BaseMap :basemap-id="settings.basemap" @ready="onReady" />
       <MapSearch @pick="flyToPlace" />
       <SelectRect
         :map="map"

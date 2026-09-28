@@ -1,6 +1,11 @@
 """OSM 解析:分类对不对、宽度怎么定、高度怎么补、隧道要不要留。"""
 
-from app.services.osm_parse import parse_osm, resolve_building_heights
+from app.services.osm_parse import (
+    CLASS_HEIGHT_PRIOR,
+    BuildingFeature,
+    parse_osm,
+    resolve_building_heights,
+)
 
 
 def test_parse_counts(sample_payload):
@@ -75,3 +80,31 @@ def test_height_backfill(sample_payload):
     no_tags = [b for b in feats.buildings if b.name is None]
     # 已知高度 [25, 40],标准中位数取中间两个的平均 → 32.5
     assert no_tags[0].height == 32.5
+
+
+def test_height_prior_when_no_known():
+    """区域里一个已知高度都凑不出来(known 为空)时,按类别查先验表。"""
+    feats = [
+        BuildingFeature(outer=_ring(0, 0, 0.001), cls="office"),
+        BuildingFeature(outer=_ring(0.01, 0, 0.001), cls="residential"),
+        BuildingFeature(outer=_ring(0.02, 0, 0.001), cls="stack_exchange"),
+        BuildingFeature(outer=_ring(0.03, 0, 0.001), cls=None),
+    ]
+    resolve_building_heights(feats)
+    assert feats[0].height == CLASS_HEIGHT_PRIOR["office"] == 20.0
+    assert feats[1].height == CLASS_HEIGHT_PRIOR["residential"] == 12.0
+    assert feats[2].height == 6.0    # 表里没有的类别走兜底
+    assert feats[3].height == 6.0    # 连类别都没有也走兜底
+
+
+def test_height_median_beats_prior():
+    """区域里有已知高度时中位数优先于先验:garage 楼跟邻居走,不吃 3 米先验。"""
+    feats = [
+        BuildingFeature(outer=_ring(0, 0, 0.001), height=100.0),
+        BuildingFeature(outer=_ring(0.01, 0, 0.001), height=100.0),
+        BuildingFeature(outer=_ring(0.02, 0, 0.001), cls="garage"),
+    ]
+    resolve_building_heights(feats)
+    # known 只收 height>0,所以 median 是 [100, 100] 的中位数
+    assert feats[2].height == 100.0
+    assert feats[2].height != CLASS_HEIGHT_PRIOR["garage"]

@@ -42,6 +42,7 @@ async def client(tmp_path, monkeypatch, sample_payload, fake_terrain):
     get_settings.cache_clear()
 
     import app.services.overpass as overpass_mod
+    import app.services.overture as overture_mod
     import app.services.terrain as terrain_mod
 
     async def fake_fetch_overpass(bbox, *, settings, on_progress=None, cancel_event=None):
@@ -56,8 +57,35 @@ async def client(tmp_path, monkeypatch, sample_payload, fake_terrain):
             on_progress(1.0, "fixture terrain")
         return fake_terrain
 
+    # 注意:管线里 Overture 是同步函数丢线程池跑的,这里 fake 也得是普通函数
+    def fake_fetch_overture(bbox, *, settings, on_progress=None, cancel_event=None):
+        # 两栋和 OSM fixture 不重合的楼:BBOX 在中国境内,auto 模式会真去拉,
+        # 集成测试一律用这份假数据。一栋带层数,一栋只有类别(吃先验高度)
+        feats = [
+            {
+                "outer": [[121.4905, 31.2345], [121.4910, 31.2345], [121.4910, 31.2350],
+                          [121.4905, 31.2350], [121.4905, 31.2345]],
+                "inners": [], "height": None, "levels": 3.0,
+                "name": "Overture 测试楼", "cls": "residential",
+            },
+            {
+                "outer": [[121.4930, 31.2355], [121.4935, 31.2355], [121.4935, 31.2360],
+                          [121.4930, 31.2360], [121.4930, 31.2355]],
+                "inners": [], "height": None, "levels": None,
+                "name": None, "cls": "commercial",
+            },
+        ]
+        p = tmp_path / "fake_overture.json"
+        p.write_text(json.dumps({
+            "release": "test", "bbox": list(bbox), "count": len(feats), "features": feats,
+        }), encoding="utf-8")
+        if on_progress:
+            on_progress(1.0, "fixture overture")
+        return p
+
     monkeypatch.setattr(overpass_mod, "fetch_overpass", fake_fetch_overpass)
     monkeypatch.setattr(terrain_mod, "fetch_terrain", fake_fetch_terrain)
+    monkeypatch.setattr(overture_mod, "fetch_overture", fake_fetch_overture)
 
     from app.main import app
 

@@ -25,11 +25,12 @@ from app.services import pipeline
 logger = logging.getLogger("app.task_manager")
 
 STAGE_WEIGHTS: dict[str, tuple[float, float]] = {
-    "FETCH_OVERPASS": (0.0, 35.0),
-    "FETCH_TERRAIN": (35.0, 50.0),
-    "PARSE_VECTOR": (50.0, 65.0),
-    "BUILD_MESH": (65.0, 90.0),
-    "WRITE_HUB": (90.0, 100.0),
+    "FETCH_OVERPASS": (0.0, 25.0),
+    "FETCH_OVERTURE": (25.0, 40.0),
+    "FETCH_TERRAIN": (40.0, 55.0),
+    "PARSE_VECTOR": (55.0, 70.0),
+    "BUILD_MESH": (70.0, 92.0),
+    "WRITE_HUB": (92.0, 100.0),
 }
 
 _PROGRESS_THROTTLE = 0.1  # 两条进度至少隔 0.1 秒才发,太密了前端也刷不过来

@@ -22,7 +22,7 @@ const emit = defineEmits<{
 /** 和后端 max_bbox_area_km2 保持一致 */
 const MAX_AREA_KM2 = 25
 
-// 图层开关(地形勾掉就按平地生成)
+// 图层开关(地形勾掉就按平地生成)+ 数据源/纠偏两个下拉(默认都走自动)
 const options = ref<TaskOptions>({
   buildings: true,
   roads: true,
@@ -30,12 +30,15 @@ const options = ref<TaskOptions>({
   water: true,
   green: true,
   terrain: true,
+  source: 'auto',
+  rectify_gcj: 'auto',
 })
 
-// 开关的显示顺序(文案走 option.* 的 key,和 TaskOptions 字段名一致)
-const OPTION_KEYS: (keyof TaskOptions)[] = [
+// 勾选框的显示顺序(文案走 option.* 的 key,和 TaskOptions 字段名一致)。
+// 只列布尔字段:source/rectify_gcj 是字符串枚举,混进来 v-model 的类型就不对了
+const OPTION_KEYS = [
   'buildings', 'roads', 'railways', 'water', 'green', 'terrain',
-]
+] as const
 
 const areaKm2 = computed(() => {
   if (!props.bbox) return 0
@@ -77,6 +80,26 @@ const canSubmit = computed(
       <label v-for="key in OPTION_KEYS" :key="key">
         <input type="checkbox" v-model="options[key]" />
         {{ $t(`option.${key}`) }}
+      </label>
+    </div>
+
+    <!-- 数据源 / GCJ-02 纠偏:两个下拉,排布和上面的开关区同款 -->
+    <div class="selects">
+      <label>
+        <span>{{ $t('option.source') }}</span>
+        <select v-model="options.source">
+          <option value="auto">{{ $t('option.sourceAuto') }}</option>
+          <option value="osm">{{ $t('option.sourceOsm') }}</option>
+          <option value="overture">{{ $t('option.sourceOverture') }}</option>
+        </select>
+      </label>
+      <label>
+        <span>{{ $t('option.rectifyGcj') }}</span>
+        <select v-model="options.rectify_gcj">
+          <option value="auto">{{ $t('option.gcjAuto') }}</option>
+          <option value="on">{{ $t('option.gcjOn') }}</option>
+          <option value="off">{{ $t('option.gcjOff') }}</option>
+        </select>
       </label>
     </div>
 

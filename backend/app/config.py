@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     terrain_z_max: int = 13
     terrain_max_tiles: int = 64
 
+    # --- Overture 开放建筑数据(补 OSM 在中国大陆的缺)---
+    # 数据是全球混排后空间聚类的 parquet,只能靠行组统计裁剪;
+    # release 钉死已验证的版本,想换就改 M2M_OVERTURE_RELEASE(换版本会重建行组索引)
+    overture_release: str = "2026-09-23.1"
+    overture_s3_bucket: str = "overturemaps-us-west-2"
+    overture_s3_region: str = "us-west-2"
+    overture_timeout: float = 60.0   # 单个文件请求的超时(秒)
+    overture_max_features: int = 50000  # 建筑条数上限,超了截断并给任务记警告
+
     # --- 各种上限,防止框的区域太大把内存/磁盘撑爆 ---
     max_bbox_area_km2: float = 25.0  # 框选最大 25 km²,再大直接拒收
     max_buildings: int = 20000
@@ -62,6 +71,10 @@ class Settings(BaseSettings):
         return self.data_dir / "cache" / "overpass"
 
     @property
+    def overture_cache_dir(self) -> Path:
+        return self.data_dir / "cache" / "overture"
+
+    @property
     def tasks_dir(self) -> Path:
         return self.data_dir / "tasks"
 
@@ -70,7 +83,7 @@ class Settings(BaseSettings):
         return self.data_dir / "app.db"
 
     def ensure_dirs(self) -> None:
-        for p in (self.data_dir, self.cache_dir, self.tasks_dir):
+        for p in (self.data_dir, self.cache_dir, self.overture_cache_dir, self.tasks_dir):
             p.mkdir(parents=True, exist_ok=True)
 
 

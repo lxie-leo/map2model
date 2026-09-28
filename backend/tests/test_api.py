@@ -42,10 +42,15 @@ async def test_full_task_flow(client):
     # 2. 等完成(离线假数据,应当很快)
     task = await wait_task(client, tid)
     assert task["status"] == "COMPLETED", task.get("error")
-    # 解析出 4 栋,其中 801 号只有 2 个点,建模时被过滤 → 3
-    assert task["stats"]["buildings"] == 3
+    # 解析出 4 栋,其中 801 号只有 2 个点,建模时被过滤 → 3;
+    # BBOX 在中国境内,auto 模式自动合并 Overture,fake 里再补 2 栋 → 5
+    assert task["stats"]["buildings"] == 5
     assert task["progress"] == 100.0
     assert 0 < task["area_km2"] < 1.0
+    # 数据来源统计:Overture 抓了 2 栋、没和 OSM 重合、都做了纠偏
+    assert task["stats"]["sources"]["overture_features"] == 2
+    assert task["stats"]["sources"]["overture_dropped"] == 0
+    assert task["stats"]["sources"]["gcj_rectified"] == 2
 
     # 3. 预览 GeoJSON
     r = await client.get(f"{PREFIX}/tasks/{tid}/preview/geojson")
@@ -99,3 +104,15 @@ async def test_export_before_complete(client):
     assert r.status_code == 409
     await wait_task(client, tid)
     await client.delete(f"{PREFIX}/tasks/{tid}")
+
+
+async def test_task_osm_only_source(client):
+    """source=osm:在中国境内也不抓 Overture,行为和没这个功能之前完全一致。"""
+    r = await client.post(
+        f"{PREFIX}/tasks", json={"bbox": list(BBOX), "options": {"source": "osm"}}
+    )
+    assert r.status_code == 200, r.text
+    task = await wait_task(client, r.json()["id"])
+    assert task["status"] == "COMPLETED", task.get("error")
+    assert task["stats"]["buildings"] == 3
+    assert not task["stats"].get("sources")  # 没抓 Overture 就没有来源统计

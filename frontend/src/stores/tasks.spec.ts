@@ -17,6 +17,7 @@ function mkTask(status: Task['status'] = 'RUNNING'): Task {
     options: {
       buildings: true, roads: true, railways: true,
       water: true, green: true, terrain: true,
+      source: 'auto', rectify_gcj: 'auto',
     },
     warnings: [],
     error: null,

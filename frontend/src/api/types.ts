@@ -23,7 +23,7 @@ export type TaskStage =
   | 'BUILD_MESH'
   | 'WRITE_HUB'
 
-/** 任务创建时可勾选的图层开关 */
+/** 任务创建时的选项:六个图层开关 + 数据源/纠偏两个下拉 */
 export interface TaskOptions {
   buildings: boolean
   roads: boolean
@@ -31,6 +31,10 @@ export interface TaskOptions {
   water: boolean
   green: boolean
   terrain: boolean
+  /** 建筑数据来源:auto = 中国区域自动合并 Overture(那里 OSM 建筑缺得多) */
+  source: 'osm' | 'overture' | 'auto'
+  /** GCJ-02 坐标纠偏(校正 Overture 中国建筑坐标的整体偏移):auto = 中国区域自动开 */
+  rectify_gcj: 'auto' | 'on' | 'off'
 }
 
 export interface Task {

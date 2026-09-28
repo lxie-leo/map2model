@@ -10,13 +10,17 @@ BBox = tuple[float, float, float, float]  # (min_lon, min_lat, max_lon, max_lat)
 
 TaskStatus = Literal["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
 TaskStage = Literal[
-    "FETCH_OVERPASS", "FETCH_TERRAIN", "PARSE_VECTOR", "BUILD_MESH", "WRITE_HUB"
+    "FETCH_OVERPASS", "FETCH_OVERTURE", "FETCH_TERRAIN", "PARSE_VECTOR", "BUILD_MESH", "WRITE_HUB"
 ]
 ExportFormat = Literal[
     "glb", "obj", "stl", "usdz", "fbx", "dae",
     "dxf", "svg", "pdf", "png", "geojson",
     "gpkg", "shp", "kml", "kmz", "cityjson", "3dtiles",
 ]
+
+
+BuildingSource = Literal["osm", "overture", "auto"]
+GcjMode = Literal["auto", "on", "off"]
 
 
 class TaskOptions(BaseModel):
@@ -26,6 +30,11 @@ class TaskOptions(BaseModel):
     water: bool = True
     green: bool = True
     terrain: bool = True
+    # 建筑数据从哪来:osm=只用 OSM;overture=建筑只用 Overture(道路水系等仍走 OSM);
+    # auto=框在中国大陆就 OSM+Overture 合并,境外只用 OSM(境外多下一份纯属浪费)
+    source: BuildingSource = "auto"
+    # GCJ-02 火星坐标纠偏(Overture 中国足迹源自加偏影像):auto=中国境内自动开
+    rectify_gcj: GcjMode = "auto"
 
 
 class TaskCreate(BaseModel):

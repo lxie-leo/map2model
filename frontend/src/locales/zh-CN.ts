@@ -92,7 +92,7 @@ const messages = {
     redraw: '重新框选',
   },
 
-  // 图层开关(键 = TaskOptions 字段名)
+  // 任务选项(布尔开关的键 = TaskOptions 字段名;下拉选项另配)
   option: {
     buildings: '建筑',
     roads: '道路',
@@ -100,6 +100,15 @@ const messages = {
     water: '水体',
     green: '绿地',
     terrain: '地形起伏',
+    source: '数据源',
+    sourceAuto: '自动(中国区域自动合并 Overture)',
+    sourceOsm: '仅 OpenStreetMap',
+    sourceOverture: '仅 Overture 建筑',
+    // 纠偏 = 校正 Overture 中国建筑坐标的整体偏移(GCJ-02 加密所致)
+    rectifyGcj: '坐标纠偏(GCJ-02)',
+    gcjAuto: '自动(中国区域自动开)',
+    gcjOn: '开启',
+    gcjOff: '关闭',
   },
 
   // 图层名(键 = GLB 节点名,和后端图层一致)
@@ -166,6 +175,12 @@ const messages = {
     placeholder: '搜索地点,如:陆家嘴',
     go: '搜',
     noResults: '没找到这个地方,换个说法试试',
+  },
+
+  // ---- 底图切换(主页地图右上角的小钮) ----
+  map: {
+    satellite: '卫星',
+    street: '街道',
   },
 
   // ---- 3D 画布 ----

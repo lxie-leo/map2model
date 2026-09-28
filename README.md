@@ -36,22 +36,25 @@ All data comes from free public sources (OSM + AWS terrain tiles). No account, n
 ## How it works
 
 ```
- draw a box ──► fetch OSM ──► fetch terrain ──► parse ──► build ──► results
-     │                                                        │
-     │                                          ┌─────────────┼─────────────┐
-     │                                          ▼             ▼             ▼
-     └── progress streamed live            hub.glb    preview.geojson    meta.json
-                                                │             │
-                                          3D formats   2D/GIS formats
+ draw a box ──► fetch OSM ──► fetch Overture buildings ──► fetch terrain ──► parse ──► build ──► results
+     │                          (inside China, an extra open building dataset      │
+     │                           is fetched and merged with OSM)                  │
+     │                                                                          │
+     │                                                            ┌─────────────┼─────────────┐
+     │                                                            ▼             ▼             ▼
+     └── progress streamed live                              hub.glb    preview.geojson    meta.json
+                                                                    │             │
+                                                              3D formats   2D/GIS formats
 ```
 
-Five steps in total; the web page shows where each one is at, and you can cancel at any time.
+Six steps in total; the web page shows where each one is at, and you can cancel at any time.
 
 ## Features
 
 - Drag a box straight on the map, area shown live; boxes that are too big (over 25 km²) get rejected
+- **No missing buildings in mainland China**: an extra set of ML-extracted building footprints from Overture Maps (free open data, no key needed) is fetched and merged with OSM — OSM lags badly in China and new districts are full of gaps; Overture fills them. The GCJ-02 "Mars coordinates" offset in that data is corrected automatically, and a satellite basemap toggle lets you verify the alignment by eye
 - Six feature classes with one consistent palette: SVG / PDF are vector and stay sharp at any zoom; PNG / DXF / GeoJSON each serve their own purpose
-- Buildings extruded by their `height` tag, estimated from floor count when missing; roads and railways get widths by class; terrain follows AWS elevation data
+- Buildings extruded by their `height` tag, estimated from floor count when missing, then from building-class priors; roads and railways get widths by class; terrain follows AWS elevation data
 - Six 3D formats (GLB / OBJ / STL / USDZ / FBX / DAE), four 2D formats (SVG / PDF / PNG / DXF), seven GIS formats (GeoJSON / GPKG / SHP / KML / KMZ / CityJSON / 3D Tiles)
 - "Up" is already sorted for you: GLB / USDZ use Y-up (Blender, three.js convention), OBJ / STL / CityJSON use Z-up (CAD convention), and 3D Tiles carry their own georeference — drop them into Cesium and they land in place
 - Flaky networks don't leave you hanging: data fetching rotates through mirrors; if terrain can't be fetched at all it falls back to flat ground, tells you why, and the task keeps going
@@ -154,6 +157,8 @@ It runs with zero configuration. To tweak, set these environment variables (all 
 | --- | --- | --- |
 | `M2M_DATA_DIR` | `data` | where the database and generated files live |
 | `M2M_OVERPASS_ENDPOINTS` | a built-in list | comma-separated, tried front to back |
+| `M2M_OVERTURE_RELEASE` | `2026-09-23.1` | Overture buildings release; changing it rebuilds the row-group index |
+| `M2M_OVERTURE_TIMEOUT` | `60` | per-file timeout for Overture fetches (seconds) |
 | `M2M_MAX_BBOX_AREA_KM2` | `25` | max area per task |
 | `M2M_MAX_BUILDINGS` | `20000` | max buildings per task |
 | `M2M_TASK_CONCURRENCY` | `2` | how many tasks run at once |
@@ -169,6 +174,9 @@ On some Windows machines antivirus interferes with npm's unpacking (`TAR_ENTRY_E
 **Q: How long does a run take?**
 Most time goes to pulling data from Overpass: about a minute for 0.3 km² of urban area, slower the bigger the box. The second run on the same area hits the cache and comes back almost instantly.
 
+**Q: First run in China sat ten-plus minutes on "fetching Overture data"?**
+That's expected. Overture's building data is shuffled globally, so the first use scans it once to build a local index (a one-time cost, cached afterwards) — every later run takes seconds. If you can't wait, switch the building source to "OpenStreetMap only" in the task panel.
+
 **Q: Why is my terrain flat?**
 Some networks can't reach AWS terrain tiles; the program then falls back to flat ground and says why in the task's warnings. Use a proxy or another network and it comes back.
 
@@ -181,7 +189,7 @@ That's not a bug. "Up" inside a GLB is Y, and Blender straightens it automatical
 ## Development
 
 ```powershell
-# backend tests (53 cases)
+# backend tests (82 cases)
 cd backend; .venv\Scripts\python.exe -m pytest -q
 
 # frontend type check + unit tests
@@ -201,4 +209,4 @@ Leo Xie — GIS / 3D / full-stack. Open to custom development and consulting: [7
 
 Code is open-sourced under [MIT](LICENSE): use it, change it, ship it commercially — just keep the LICENSE file with it.
 
-One reminder: the maps and models this tool produces come from OpenStreetMap data (ODbL license). Personal use is fine; if you publish or commercially distribute the results, include the OSM attribution (a "© OpenStreetMap contributors" line is enough).
+One reminder: the maps and models this tool produces come from two open datasets — OpenStreetMap (ODbL license) and building footprints from the Overture Maps Foundation (CDLA-Permissive 2.0, used mainly for the China building infill). Personal use is fine; if you publish or commercially distribute the results, include the attributions: one "© OpenStreetMap contributors" line and one "Buildings © Overture Maps Foundation" line.

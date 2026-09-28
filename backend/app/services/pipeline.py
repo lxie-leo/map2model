@@ -19,8 +19,9 @@ import numpy as np
 import trimesh
 
 from app.config import Settings
-from app.core.errors import TaskCancelled
-from app.services import osm_parse, overpass
+from app.core.errors import FetchError, TaskCancelled
+from app.services import building_merge, gcj, osm_parse, overpass
+from app.services import overture as overture_svc
 from app.services import terrain as terrain_svc
 from app.services.mesh import scene as scene_svc
 from app.services.mesh.extrude import extrude_buildings
@@ -70,6 +71,7 @@ class _LocalData:
     water_polys: list = field(default_factory=list)
     greens: list = field(default_factory=list)
     preview_features: list = field(default_factory=list)  # lonlat,给前端 2D 回显
+    source_stats: dict = field(default_factory=dict)  # 数据来源统计(进任务 stats)
 
 
 async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
@@ -82,6 +84,35 @@ async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
         ctx.bbox, settings=ctx.settings, on_progress=overpass_progress,
         cancel_event=ctx.cancel_event,
     )
+    _check_cancel(ctx.cancel_event)
+
+    # ---- 阶段 1.5:抓 Overture 建筑(补 OSM 的缺;用不上就跳过)----
+    # auto 模式看框选中心在不在大陆:在,说明 OSM 大概率缺建筑,值得多拉一份
+    center_lon = (ctx.bbox[0] + ctx.bbox[2]) / 2
+    center_lat = (ctx.bbox[1] + ctx.bbox[3]) / 2
+    source = ctx.options.get("source", "auto")
+    want_overture = source == "overture" or (
+        source == "auto" and gcj.in_china(center_lon, center_lat)
+    )
+    ov_path = None
+    if want_overture:
+        def overture_progress(frac: float, msg: str | None = None) -> None:
+            ctx.progress("FETCH_OVERTURE", frac, msg)
+
+        # 抓取是同步阻塞的(扫 footer + 拉行组),丢线程池跑
+        try:
+            ov_path = await anyio.to_thread.run_sync(
+                lambda: overture_svc.fetch_overture(
+                    ctx.bbox, settings=ctx.settings,
+                    on_progress=overture_progress, cancel_event=ctx.cancel_event,
+                )
+            )
+        except FetchError:
+            if source == "overture":
+                raise  # 明确点名要 Overture 的,失败了就得让他知道
+            ctx.warn("Overture buildings unavailable; falling back to OSM-only")
+    else:
+        ctx.progress("FETCH_OVERTURE", 1.0, "skipped")
     _check_cancel(ctx.cancel_event)
 
     # ---- 阶段 2:抓地形(抓不到就凑合用平地) ----
@@ -107,7 +138,7 @@ async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
     def parse_progress(frac: float, msg: str | None = None) -> None:
         ctx.progress("PARSE_VECTOR", frac, msg)
 
-    local = await anyio.to_thread.run_sync(_parse_and_localize, osm_path, projector, ctx)
+    local = await anyio.to_thread.run_sync(_parse_and_localize, osm_path, ov_path, projector, ctx)
     _check_cancel(ctx.cancel_event)
 
     # ---- 阶段 4:建模(CPU,进线程池) ----
@@ -136,6 +167,7 @@ async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
         "waterways": len(local.waterways),
         "water_polys": len(local.water_polys),
         "greens": len(local.greens),
+        "sources": local.source_stats,
         "terrain": {
             "source": "aws-terrarium" if grid.nx > 2 else "flat",
             "min_h": round(float(grid.z.min()), 2),
@@ -178,23 +210,45 @@ async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _parse_and_localize(
-    osm_path: Path, projector: Projector, ctx: PipelineContext
+    osm_path: Path, ov_path: Path | None, projector: Projector, ctx: PipelineContext
 ) -> _LocalData:
     ctx.progress("PARSE_VECTOR", 0.1, "parsing overpass json")
     payload = read_json(osm_path)
     feats = osm_parse.parse_osm(payload)
 
-    ctx.progress("PARSE_VECTOR", 0.35, f"parsed: {len(feats.buildings)} buildings")
+    ctx.progress("PARSE_VECTOR", 0.3, f"parsed: {len(feats.buildings)} buildings")
+
+    # Overture 建筑:先纠偏(中国区足迹带 GCJ-02 偏移)再去重合并,
+    # 保证比的是纠偏后的几何;高度补全放到合并后,中位数能吃到两个来源
+    source_stats: dict = {}
+    if ov_path is not None:
+        ov_feats = overture_svc.parse_overture(ov_path)
+        mode = ctx.options.get("rectify_gcj", "auto")
+        center = ((ctx.bbox[0] + ctx.bbox[2]) / 2, (ctx.bbox[1] + ctx.bbox[3]) / 2)
+        do_rectify = mode == "on" or (mode == "auto" and gcj.in_china(*center))
+        rectified = gcj.rectify_features(ov_feats) if do_rectify else 0
+
+        ctx.progress("PARSE_VECTOR", 0.45, f"merging {len(ov_feats)} overture buildings")
+        feats.buildings, dropped = building_merge.merge_buildings(feats.buildings, ov_feats)
+        source_stats = {
+            "overture_release": ctx.settings.overture_release,
+            "overture_features": len(ov_feats),
+            "overture_dropped": dropped,
+            "gcj_rectified": rectified,
+        }
+
+    ctx.progress("PARSE_VECTOR", 0.55, "resolving building heights")
     osm_parse.resolve_building_heights(feats.buildings)
 
     opts = ctx.options
     local = _LocalData()
+    local.source_stats = source_stats
     if opts.get("buildings", True):
         local.buildings = to_local_buildings(
             feats.buildings, projector,
             max_buildings=ctx.settings.max_buildings, warn=ctx.warn,
         )
-    ctx.progress("PARSE_VECTOR", 0.55, "converting to local coordinates")
+    ctx.progress("PARSE_VECTOR", 0.65, "converting to local coordinates")
     if opts.get("roads", True):
         local.roads = to_local_lines(feats.roads, projector)
     if opts.get("railways", True):

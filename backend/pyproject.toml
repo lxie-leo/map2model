@@ -31,6 +31,7 @@ dependencies = [
     # mapbox_earcut has no cp314 wheels; utils/geom.py falls back to a pure-python
     # triangulator when the import fails, so this stays optional on 3.14+
     "mapbox-earcut>=1.0.3 ; python_version < '3.14'",
+    "pyarrow>=22",
 ]
 
 [project.optional-dependencies]

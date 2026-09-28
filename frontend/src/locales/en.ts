@@ -95,6 +95,14 @@ const messages = {
     water: 'Water',
     green: 'Green',
     terrain: 'Terrain relief',
+    source: 'Building source',
+    sourceAuto: 'Auto (merge Overture in China)',
+    sourceOsm: 'OpenStreetMap only',
+    sourceOverture: 'Overture buildings only',
+    rectifyGcj: 'Coordinate fix (GCJ-02)',
+    gcjAuto: 'Auto (on inside China)',
+    gcjOn: 'On',
+    gcjOff: 'Off',
   },
 
   layer: {
@@ -153,6 +161,11 @@ const messages = {
     placeholder: 'Search a place, e.g. Lujiazui',
     go: 'Go',
     noResults: 'Nothing found — try another name',
+  },
+
+  map: {
+    satellite: 'Satellite',
+    street: 'Street',
   },
 
   scene: {

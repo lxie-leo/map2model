@@ -274,6 +274,43 @@ body {
   cursor: pointer;
 }
 
+/* 图层开关下面的两个下拉(数据源 / GCJ-02 纠偏):接着 .options 的紧凑排布,
+   字号配色同款,宽度紧张时让下拉去缩、文案不动 */
+.bbox-panel .selects {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.bbox-panel .selects label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.bbox-panel .selects label > span {
+  flex: none;
+}
+
+.bbox-panel .selects select {
+  flex: 1;
+  min-width: 0; /* 允许被压窄,太长的选项由原生下拉自己截断 */
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  outline: none;
+}
+
+.bbox-panel .selects select:focus {
+  border-color: var(--accent);
+}
+
 /* ---- 按钮 ---- */
 
 button,
