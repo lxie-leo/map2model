@@ -42,6 +42,31 @@ def test_resample_non_square_grid():
     assert np.allclose(grid.z, 42.0)
 
 
+def test_resample_reads_mosaic_at_tile_origin():
+    """马赛克第 0 像素对应左上角瓦片,不是全球原点。
+
+    以前采样坐标忘了减掉左上瓦片的起点,所有点都被当成"图外"
+    钳在右下角一个像素上,整张地形退化成一个常数(真实事故:某框
+    东南角是海,地形 min=max=median 全是 0)。带梯度的马赛克一采
+    就现形——常数测试(上面的 42.0)抓不住这种错。
+    """
+    # 这个框在东经 121°,z=6 时只盖住一张瓦片,马赛克就是它整张 256x256
+    bbox = (121.0, 30.0, 122.0, 30.5)
+    proj = Projector(bbox)
+
+    # 西低东高:采样出来也得东边比西边高,而且要有看得见的起伏
+    mosaic_x = np.tile(np.arange(256, dtype=float), (256, 1))
+    grid = _resample(mosaic_x, 6, bbox, proj, 512)
+    assert grid.z.max() - grid.z.min() > 10.0
+    assert grid.z[:, -1].mean() > grid.z[:, 0].mean()
+
+    # 北低南高:网格第 0 行是最南边,所以第 0 行的均值要更大
+    mosaic_y = np.tile(np.arange(256, dtype=float).reshape(256, 1), (1, 256))
+    grid = _resample(mosaic_y, 6, bbox, proj, 512)
+    assert grid.z.max() - grid.z.min() > 10.0
+    assert grid.z[0, :].mean() > grid.z[-1, :].mean()
+
+
 def test_sample_uses_dy():
     """长方形网格查高度:y 方向要按 y 自己的间距算,不能借 x 的。"""
     z = np.array([[0.0, 0.0], [10.0, 10.0]])  # 南边 0 米,北边 10 米

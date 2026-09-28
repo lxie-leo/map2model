@@ -147,6 +147,14 @@ def _resample(mosaic: np.ndarray, z: int, bbox, projector: Projector,
     """把拼好的瓦片大图缩成局部坐标系下的 N×N 小网格(numpy 整块一起算,快)。"""
     n = 2.0 ** z * 256.0  # 该缩放级别全球总像素数
 
+    # 马赛克第 0 行第 0 列对应的是左上角那张瓦片,不是全球原点:
+    # 经纬度换出来的是全球像素坐标,得先减掉左上瓦片的起点再进图里采样。
+    # 以前漏了这一步,所有采样点都被当成"图外"钳在右下角一个像素上,
+    # 整张地形退化成一个常数(框选东南角是海就全 0,是平原就全 13)
+    min_lon, _, _, max_lat = bbox
+    tx0, ty0 = lonlat_to_tile(min_lon, max_lat, z)
+    ox, oy = tx0 * 256.0, ty0 * 256.0
+
     # 目标网格尺寸:约 10 米格距,上下限 64~grid_max
     width_m = projector.width_m
     height_m = projector.height_m
@@ -161,9 +169,9 @@ def _resample(mosaic: np.ndarray, z: int, bbox, projector: Projector,
     ys = y0 + np.arange(ny) * (height_m / max(ny - 1, 1))
     grid_x, grid_y = np.meshgrid(xs, ys)                    # 形状 (ny, nx)
     lons, lats = projector.to_lonlat_grid(grid_x, grid_y)
-    px = (lons + 180.0) / 360.0 * n
+    px = (lons + 180.0) / 360.0 * n - ox
     lat_rad = np.radians(lats)
-    py = (1.0 - np.arcsinh(np.tan(lat_rad)) / math.pi) / 2.0 * n
+    py = (1.0 - np.arcsinh(np.tan(lat_rad)) / math.pi) / 2.0 * n - oy
     grid = _bilinear(mosaic, px.ravel(), py.ravel()).reshape(ny, nx)
 
     # 没抓到的角落可能是 NaN,用有效值的中位数补上;万一整张图都是 NaN
