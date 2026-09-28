@@ -1,7 +1,8 @@
 """API 全链路:健康检查 → 建任务 → 等完成 → 预览/下载 → 导出 → 下载导出。"""
 
 import asyncio
-import json
+
+import pytest
 
 from tests.conftest import BBOX, wait_task
 
@@ -31,9 +32,16 @@ async def test_bbox_too_large(client):
     assert "exceeds" in r.json()["error"]["message"]
 
 
-async def test_full_task_flow(client):
+@pytest.mark.parametrize("rectify,expect_rectified", [
+    # Overture 中国建筑实测就是 WGS-84,auto 默认不纠;只有显式"开启"才平移
+    ("auto", 0),
+    ("on", 2),
+])
+async def test_full_task_flow(client, rectify, expect_rectified):
     # 1. 创建
-    r = await client.post(f"{PREFIX}/tasks", json={"bbox": list(BBOX)})
+    r = await client.post(
+        f"{PREFIX}/tasks", json={"bbox": list(BBOX), "options": {"rectify_gcj": rectify}}
+    )
     assert r.status_code == 200, r.text
     task = r.json()
     tid = task["id"]
@@ -47,10 +55,10 @@ async def test_full_task_flow(client):
     assert task["stats"]["buildings"] == 5
     assert task["progress"] == 100.0
     assert 0 < task["area_km2"] < 1.0
-    # 数据来源统计:Overture 抓了 2 栋、没和 OSM 重合、都做了纠偏
+    # 数据来源统计:Overture 抓了 2 栋、没和 OSM 重合;纠偏栋数看模式
     assert task["stats"]["sources"]["overture_features"] == 2
     assert task["stats"]["sources"]["overture_dropped"] == 0
-    assert task["stats"]["sources"]["gcj_rectified"] == 2
+    assert task["stats"]["sources"]["gcj_rectified"] == expect_rectified
 
     # 3. 预览 GeoJSON
     r = await client.get(f"{PREFIX}/tasks/{tid}/preview/geojson")

@@ -100,9 +100,11 @@ const messages = {
     sourceAuto: 'Auto (merge Overture in China)',
     sourceOsm: 'OpenStreetMap only',
     sourceOverture: 'Overture buildings only',
+    // Overture coords proved to be WGS-84 already; shifting them "back" moved
+    // buildings 300-400 m off, so auto now means: don't rectify
     rectifyGcj: 'Coordinate fix (GCJ-02)',
-    gcjAuto: 'Auto (on inside China)',
-    gcjOn: 'On',
+    gcjAuto: 'Auto (off by default)',
+    gcjOn: 'On (force shift)',
     gcjOff: 'Off',
   },
 

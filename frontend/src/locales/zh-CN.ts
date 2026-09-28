@@ -105,10 +105,11 @@ const messages = {
     sourceAuto: '自动(中国区域自动合并 Overture)',
     sourceOsm: '仅 OpenStreetMap',
     sourceOverture: '仅 Overture 建筑',
-    // 纠偏 = 校正 Overture 中国建筑坐标的整体偏移(GCJ-02 加密所致)
+    // 纠偏 = 把 Overture 中国建筑按 GCJ-02 平移回 WGS-84。
+    // 实测 Overture 坐标本来就是 WGS-84,默认纠了反而整体偏三四百米,所以自动=不纠
     rectifyGcj: '坐标纠偏(GCJ-02)',
-    gcjAuto: '自动(中国区域自动开)',
-    gcjOn: '开启',
+    gcjAuto: '自动(默认不纠)',
+    gcjOn: '开启(强制平移)',
     gcjOff: '关闭',
   },
 

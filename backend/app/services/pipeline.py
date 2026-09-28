@@ -218,14 +218,17 @@ def _parse_and_localize(
 
     ctx.progress("PARSE_VECTOR", 0.3, f"parsed: {len(feats.buildings)} buildings")
 
-    # Overture 建筑:先纠偏(中国区足迹带 GCJ-02 偏移)再去重合并,
-    # 保证比的是纠偏后的几何;高度补全放到合并后,中位数能吃到两个来源
+    # Overture 建筑:可选 GCJ-02 纠偏后再去重合并,保证比的是同一套坐标系;
+    # 高度补全放到合并后,中位数能吃到两个来源
     source_stats: dict = {}
     if ov_path is not None:
         ov_feats = overture_svc.parse_overture(ov_path)
         mode = ctx.options.get("rectify_gcj", "auto")
-        center = ((ctx.bbox[0] + ctx.bbox[2]) / 2, (ctx.bbox[1] + ctx.bbox[3]) / 2)
-        do_rectify = mode == "on" or (mode == "auto" and gcj.in_china(*center))
+        # 实测(2026-09,温州框与 OSM 道路/水系比对):Overture 中国建筑
+        # 本来就是 WGS-84,不存在当初猜的 GCJ 偏移;auto 下做逆纠偏反而把
+        # 楼整体平移三四百米——漂进河里、推出地形网格。所以 auto 一律不纠,
+        # 只有明确选"开启"才平移(留作开关,万一哪天真遇上偏移数据)
+        do_rectify = mode == "on"
         rectified = gcj.rectify_features(ov_feats) if do_rectify else 0
 
         ctx.progress("PARSE_VECTOR", 0.45, f"merging {len(ov_feats)} overture buildings")
