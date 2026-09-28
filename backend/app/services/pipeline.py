@@ -1,4 +1,4 @@
-"""任务主管线:抓数据 → 抓地形 → 解析 → 建模 → 写枢纽文件。
+"""任务主管线:抓 OSM → 抓 Overture 建筑 → 抓地形 → 解析 → 建模 → 写枢纽文件。
 
 每个阶段都会通过 ctx.progress 上报进度(阶段内 0~1,
 任务管理器负责折算成全局 0~100),阶段之间顺手检查有没有被取消。
@@ -75,7 +75,7 @@ class _LocalData:
 
 
 async def run_pipeline(ctx: PipelineContext) -> dict[str, Any]:
-    """跑完五个阶段,返回统计信息(会存进任务记录)。"""
+    """跑完六个阶段,返回统计信息(会存进任务记录)。"""
     # ---- 阶段 1:抓 OSM 数据 ----
     def overpass_progress(frac: float, msg: str | None = None) -> None:
         ctx.progress("FETCH_OVERPASS", frac, msg)
@@ -276,7 +276,7 @@ def _build_preview_features(local: _LocalData, projector: Projector) -> list[dic
 
     def line_f(pts: np.ndarray, layer: str, props: dict) -> dict:
         lons, lats = projector.to_lonlat_grid(pts[:, 0], pts[:, 1])
-        coords = [[float(lo), float(la)] for lo, la in zip(lons, lats)]
+        coords = [[float(lo), float(la)] for lo, la in zip(lons, lats, strict=True)]
         return {
             "type": "Feature",
             "properties": {"layer": layer, **props},
@@ -287,7 +287,7 @@ def _build_preview_features(local: _LocalData, projector: Projector) -> list[dic
         def ring_lonlat(ring) -> list[list[float]]:
             arr = np.asarray(ring.coords)
             lons, lats = projector.to_lonlat_grid(arr[:, 0], arr[:, 1])
-            return [[float(lo), float(la)] for lo, la in zip(lons, lats)]
+            return [[float(lo), float(la)] for lo, la in zip(lons, lats, strict=True)]
 
         rings = [ring_lonlat(poly.exterior)]
         for r in poly.interiors:
