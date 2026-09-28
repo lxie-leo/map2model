@@ -15,9 +15,10 @@ export interface PlaceResult {
 /** 任务的几种状态:排队 → 运行 → 完成/失败/取消 */
 export type TaskStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
 
-/** 任务处理的五个阶段,和后端的步骤一一对应 */
+/** 任务处理的六个阶段,和后端的步骤一一对应 */
 export type TaskStage =
   | 'FETCH_OVERPASS'
+  | 'FETCH_OVERTURE'
   | 'FETCH_TERRAIN'
   | 'PARSE_VECTOR'
   | 'BUILD_MESH'

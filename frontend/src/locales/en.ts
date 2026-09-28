@@ -11,6 +11,7 @@ const messages = {
   task: {
     stage: {
       FETCH_OVERPASS: 'Fetching OSM data',
+      FETCH_OVERTURE: 'Fetching Overture buildings',
       FETCH_TERRAIN: 'Fetching terrain elevation',
       PARSE_VECTOR: 'Parsing vector features',
       BUILD_MESH: 'Building 3D meshes',

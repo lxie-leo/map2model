@@ -1,8 +1,8 @@
 """任务的大管家:接活、排队、限制同时跑几个、汇报进度、支持中途取消。
 
-一个任务的一生:QUEUED(排队)→ RUNNING(跑着,分五个阶段)→ COMPLETED / FAILED / CANCELLED。
-五个阶段在总进度(0-100)里各占一段:
-  抓 OSM 数据 0-35 / 抓地形 35-50 / 解析矢量 50-65 / 建网格 65-90 / 写枢纽文件 90-100
+一个任务的一生:QUEUED(排队)→ RUNNING(跑着,分六个阶段)→ COMPLETED / FAILED / CANCELLED。
+六个阶段在总进度(0-100)里各占一段:
+  抓 OSM 数据 0-25 / 抓 Overture 建筑 25-40 / 抓地形 40-55 / 解析矢量 55-70 / 建网格 70-92 / 写枢纽文件 92-100
 """
 
 from __future__ import annotations

@@ -12,6 +12,7 @@ const messages = {
   task: {
     stage: {
       FETCH_OVERPASS: '拉取 OSM 数据',
+      FETCH_OVERTURE: '拉取 Overture 建筑',
       FETCH_TERRAIN: '拉取地形高程',
       PARSE_VECTOR: '解析矢量要素',
       BUILD_MESH: '构建三维网格',
